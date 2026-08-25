@@ -106,6 +106,9 @@ async def test_setup_creates_ten_sensors_with_source_based_entity_ids(
     assert "sensor.kitchen_dishwasher_energy_this_year" in {
         item.entity_id for item in generated
     }
+    state = hass.states.get("sensor.kitchen_dishwasher_energy_total")
+    assert state is not None
+    assert state.state != "unavailable"
 
     with (
         patch(

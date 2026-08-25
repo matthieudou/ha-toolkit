@@ -9,6 +9,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.mattsassistant.config_flow import CONF_DETACH_ENTITY_IDS
 from custom_components.mattsassistant.const import (
     CONF_ATTACH_ENTITY_IDS,
     CONF_CONFIGURATION_TYPE,
@@ -56,44 +57,47 @@ async def _start_flow(hass: HomeAssistant) -> dict:
     )
 
 
-async def test_user_flow_stores_sources_device_links_and_price(
+async def test_user_flow_stores_all_settings_from_one_page(
     recorder_mock: object, enable_custom_integrations: None, hass: HomeAssistant
 ) -> None:
-    """A typed configuration stores explicit source entities and pricing."""
+    """The second and final creation page stores sources, groups, and pricing."""
     del recorder_mock, enable_custom_integrations
     entity_id = _add_energy_source(hass)
     hass.states.async_set("input_number.electricity_price", "0.32")
     result = await _start_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configuration"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_SOURCE_ENTITY_IDS: [entity_id],
+            CONF_DETACH_ENTITY_IDS: [],
+            CONF_GROUPS: [
+                {
+                    CONF_GROUP_NAME: "Housekeeping",
+                    CONF_GROUP_ENTITY_IDS: [entity_id],
+                }
+            ],
             CONF_PRICE_ENTITY_ID: "input_number.electricity_price",
         },
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_ATTACH_ENTITY_IDS: [entity_id]}
-    )
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "finish"}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SOURCE_ENTITY_IDS] == [entity_id]
     assert result["data"][CONF_ATTACH_ENTITY_IDS] == [entity_id]
-    assert result["data"][CONF_PRICE_ENTITY_ID] == ("input_number.electricity_price")
+    assert result["data"][CONF_GROUPS][0][CONF_GROUP_NAME] == "Housekeeping"
+    assert result["data"][CONF_PRICE_ENTITY_ID] == "input_number.electricity_price"
 
 
 async def test_flow_rejects_a_non_numeric_price(
     recorder_mock: object, enable_custom_integrations: None, hass: HomeAssistant
 ) -> None:
-    """Cost sensors cannot be configured from an unusable current price."""
+    """A price must currently expose a usable numeric value."""
     del recorder_mock, enable_custom_integrations
     entity_id = _add_energy_source(hass)
     hass.states.async_set("input_number.electricity_price", "unknown")
     result = await _start_flow(hass)
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -101,38 +105,50 @@ async def test_flow_rejects_a_non_numeric_price(
             CONF_PRICE_ENTITY_ID: "input_number.electricity_price",
         },
     )
-
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_price"}
 
 
-async def test_flow_can_create_a_group_without_individual_sensors(
+async def test_options_flow_is_one_page_and_preserves_group_id(
     recorder_mock: object, enable_custom_integrations: None, hass: HomeAssistant
 ) -> None:
-    """Group members do not need duplicate individual sensor generation."""
+    """Editing has no nested menu and renaming keeps the virtual device identity."""
     del recorder_mock, enable_custom_integrations
     entity_id = _add_energy_source(hass)
-    result = await _start_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_SOURCE_ENTITY_IDS: []}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "add_group"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_GROUP_NAME: "Housekeeping",
-            CONF_GROUP_ENTITY_IDS: [entity_id],
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_CONFIGURATION_TYPE: ConfigurationType.ELECTRICITY_ENERGY.value,
+            CONF_SOURCE_ENTITY_IDS: [],
+            CONF_ATTACH_ENTITY_IDS: [],
+            CONF_GROUPS: [
+                {
+                    "id": "stable-id",
+                    CONF_GROUP_NAME: "Old name",
+                    CONF_GROUP_ENTITY_IDS: [entity_id],
+                }
+            ],
         },
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "finish"}
-    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configuration"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_SOURCE_ENTITY_IDS: [],
+            CONF_GROUPS: [
+                {
+                    CONF_GROUP_NAME: "New name",
+                    CONF_GROUP_ENTITY_IDS: [entity_id],
+                }
+            ],
+        },
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_SOURCE_ENTITY_IDS] == []
-    assert result["data"][CONF_GROUPS][0][CONF_GROUP_NAME] == "Housekeeping"
+    assert result["data"][CONF_GROUPS][0]["id"] == "stable-id"
 
 
 async def test_flow_requires_an_individual_sensor_or_group(
@@ -141,12 +157,6 @@ async def test_flow_requires_an_individual_sensor_or_group(
     """An empty configuration cannot silently create no entities."""
     del recorder_mock, enable_custom_integrations
     result = await _start_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_SOURCE_ENTITY_IDS: []}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "finish"}
-    )
-
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_targets"}

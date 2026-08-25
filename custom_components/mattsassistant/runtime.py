@@ -33,6 +33,7 @@ class MeterTargetRuntime:
     sources: tuple[MeterSourceRuntime, ...]
     price: PriceRuntime | None
     entry_id: str = ""
+    entry: ConfigEntry | None = None
     _measurement_series: CumulativeSeries | None = field(default=None, init=False)
     _cost_series: CumulativeSeries | None = field(default=None, init=False)
     _listeners: set[Callable[[], None]] = field(default_factory=set, init=False)
@@ -155,6 +156,7 @@ class MattsAssistantRuntimeData:
         self.targets = tuple(
             MeterTargetRuntime(
                 hass=self.hass,
+                entry=self.entry,
                 target=target,
                 sources=tuple(self.sources[source.key] for source in target.sources),
                 price=self.price,

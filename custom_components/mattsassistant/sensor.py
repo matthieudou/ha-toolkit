@@ -172,11 +172,12 @@ class MattsAssistantSensor(SensorEntity):
                 )
                 registry.async_update_entity(self.entity_id, device_id=device_id)
         self.async_on_remove(self.runtime.async_add_listener(self._handle_update))
-        self.runtime.entry.async_create_background_task(
-            self.hass,
-            self._async_backfill(),
-            f"Backfill statistics for {self.entity_id}",
-        )
+        backfill = self._async_backfill()
+        name = f"Backfill statistics for {self.entity_id}"
+        if self.runtime.entry is not None:
+            self.runtime.entry.async_create_background_task(self.hass, backfill, name)
+        else:
+            self.hass.async_create_background_task(backfill, name)
 
     @callback
     def _handle_update(self) -> None:

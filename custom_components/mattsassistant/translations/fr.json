@@ -9,6 +9,22 @@
           "configuration_type": "Type de source"
         }
       },
+      "configuration": {
+        "title": "Configuration du compteur",
+        "description": "Configurez les capteurs individuels, les groupes, leurs rattachements et un prix actuel facultatif par {price_unit}.",
+        "data": {
+          "source_entity_ids": "Capteurs individuels",
+          "detach_entity_ids": "Garder séparé de l'appareil source",
+          "groups": "Groupes",
+          "price_entity_id": "Entité du prix unitaire actuel"
+        },
+        "data_description": {
+          "source_entity_ids": "Chaque capteur sélectionné reçoit ses propres capteurs dérivés.",
+          "detach_entity_ids": "Par défaut, les capteurs dérivés sont rattachés à l'appareil source. Sélectionnez ici les exceptions.",
+          "groups": "Chaque groupe nommé reçoit un appareil virtuel contenant la somme de ses membres.",
+          "price_entity_id": "Laissez vide pour ne pas créer de capteurs de coût. Les changements de prix historiques s'appliquent au moment où ils ont eu lieu."
+        }
+      },
       "sources": {
         "title": "Capteurs individuels",
         "description": "Sélectionnez les capteurs individuels compatibles et, si nécessaire, un prix actuel par {price_unit}. Les groupes se configurent ensuite.",
@@ -64,6 +80,7 @@
     "error": {
       "no_targets": "Sélectionnez au moins un capteur individuel ou créez un groupe.",
       "invalid_sources": "Un ou plusieurs capteurs ne correspondent plus à ce type de source.",
+      "invalid_detached_sources": "Seuls les capteurs individuels sélectionnés peuvent rester séparés de leur appareil source.",
       "invalid_price": "L'entité de prix sélectionnée doit actuellement contenir un nombre positif ou nul.",
       "duplicate_group_name": "Un groupe utilise déjà ce nom.",
       "required": "Ce champ est obligatoire."
@@ -71,6 +88,22 @@
   },
   "options": {
     "step": {
+      "configuration": {
+        "title": "Configuration du compteur",
+        "description": "Configurez les capteurs individuels, les groupes, leurs rattachements et un prix actuel facultatif par {price_unit}.",
+        "data": {
+          "source_entity_ids": "Capteurs individuels",
+          "detach_entity_ids": "Garder séparé de l'appareil source",
+          "groups": "Groupes",
+          "price_entity_id": "Entité du prix unitaire actuel"
+        },
+        "data_description": {
+          "source_entity_ids": "Chaque capteur sélectionné reçoit ses propres capteurs dérivés.",
+          "detach_entity_ids": "Par défaut, les capteurs dérivés sont rattachés à l'appareil source. Sélectionnez ici les exceptions.",
+          "groups": "Chaque groupe nommé reçoit un appareil virtuel contenant la somme de ses membres.",
+          "price_entity_id": "Laissez vide pour ne pas créer de capteurs de coût. Les changements de prix historiques s'appliquent au moment où ils ont eu lieu."
+        }
+      },
       "sources": {
         "title": "Capteurs individuels",
         "description": "Sélectionnez les capteurs individuels compatibles et, si nécessaire, un prix actuel par {price_unit}. Les groupes se configurent ensuite.",
@@ -126,6 +159,7 @@
     "error": {
       "no_targets": "Sélectionnez au moins un capteur individuel ou créez un groupe.",
       "invalid_sources": "Un ou plusieurs capteurs ne correspondent plus à ce type de source.",
+      "invalid_detached_sources": "Seuls les capteurs individuels sélectionnés peuvent rester séparés de leur appareil source.",
       "invalid_price": "L'entité de prix sélectionnée doit actuellement contenir un nombre positif ou nul.",
       "duplicate_group_name": "Un groupe utilise déjà ce nom.",
       "required": "Ce champ est obligatoire."

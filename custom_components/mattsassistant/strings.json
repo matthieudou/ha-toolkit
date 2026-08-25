@@ -7,6 +7,22 @@
         "description": "Choose what the source sensors measure.",
         "data": {"configuration_type": "Source type"}
       },
+      "configuration": {
+        "title": "Meter configuration",
+        "description": "Configure individual sensors, groups, device links, and an optional current price per {price_unit}.",
+        "data": {
+          "source_entity_ids": "Individual sensors",
+          "detach_entity_ids": "Keep separate from the source device",
+          "groups": "Groups",
+          "price_entity_id": "Current unit price entity"
+        },
+        "data_description": {
+          "source_entity_ids": "Each selected sensor receives its own derived sensors.",
+          "detach_entity_ids": "By default, derived sensors are attached to their source device. Select exceptions here.",
+          "groups": "Each named group receives a virtual device containing the sum of its members.",
+          "price_entity_id": "Leave empty to omit cost sensors. Historical price changes are applied when they occurred."
+        }
+      },
       "sources": {
         "title": "Individual sensors",
         "description": "Select compatible individual sensors and, if needed, a current price per {price_unit}. Groups are configured next.",
@@ -55,6 +71,7 @@
     "error": {
       "no_targets": "Select at least one individual sensor or create a group.",
       "invalid_sources": "One or more sensors no longer match this source type.",
+      "invalid_detached_sources": "Only selected individual sensors can be kept separate from their source device.",
       "invalid_price": "The selected price entity must currently contain a non-negative number.",
       "duplicate_group_name": "A group already uses this name.",
       "required": "This field is required."
@@ -62,6 +79,22 @@
   },
   "options": {
     "step": {
+      "configuration": {
+        "title": "Meter configuration",
+        "description": "Configure individual sensors, groups, device links, and an optional current price per {price_unit}.",
+        "data": {
+          "source_entity_ids": "Individual sensors",
+          "detach_entity_ids": "Keep separate from the source device",
+          "groups": "Groups",
+          "price_entity_id": "Current unit price entity"
+        },
+        "data_description": {
+          "source_entity_ids": "Each selected sensor receives its own derived sensors.",
+          "detach_entity_ids": "By default, derived sensors are attached to their source device. Select exceptions here.",
+          "groups": "Each named group receives a virtual device containing the sum of its members.",
+          "price_entity_id": "Leave empty to omit cost sensors. Historical price changes are applied when they occurred."
+        }
+      },
       "sources": {
         "title": "Individual sensors",
         "description": "Select compatible individual sensors and, if needed, a current price per {price_unit}. Groups are configured next.",
@@ -110,6 +143,7 @@
     "error": {
       "no_targets": "Select at least one individual sensor or create a group.",
       "invalid_sources": "One or more sensors no longer match this source type.",
+      "invalid_detached_sources": "Only selected individual sensors can be kept separate from their source device.",
       "invalid_price": "The selected price entity must currently contain a non-negative number.",
       "duplicate_group_name": "A group already uses this name.",
       "required": "This field is required."
