@@ -1,0 +1,270 @@
+{
+  "title": "MattsAssistant",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nouvelle configuration de compteur",
+        "description": "Choisissez ce que mesurent les capteurs sources.",
+        "data": {
+          "configuration_type": "Type de source"
+        }
+      },
+      "sources": {
+        "title": "Capteurs individuels",
+        "description": "Sélectionnez les capteurs individuels compatibles et, si nécessaire, un prix actuel par {price_unit}. Les groupes se configurent ensuite.",
+        "data": {
+          "source_entity_ids": "Capteurs individuels",
+          "price_entity_id": "Entité du prix unitaire actuel"
+        },
+        "data_description": {
+          "source_entity_ids": "Chaque capteur sélectionné reçoit ses propres capteurs dérivés.",
+          "price_entity_id": "Laissez vide pour ne pas créer de capteurs de coût. Les changements de prix historiques s'appliquent au moment où ils ont eu lieu."
+        }
+      },
+      "source_options": {
+        "title": "Rattachement aux appareils",
+        "description": "Choisissez quels capteurs dérivés individuels appartiennent à l'appareil source.",
+        "data": {
+          "attach_entity_ids": "Rattacher à l'appareil source"
+        }
+      },
+      "manage_groups": {
+        "title": "Groupes",
+        "description": "Ajoutez ou modifiez des groupes nommés, revenez aux capteurs individuels ou enregistrez cette configuration.",
+        "menu_options": {
+          "add_group": "Ajouter un groupe",
+          "edit_group": "Modifier un groupe",
+          "edit_sources": "Modifier les capteurs individuels",
+          "finish": "Enregistrer la configuration"
+        }
+      },
+      "add_group": {
+        "title": "Ajouter un groupe",
+        "description": "Un groupe reçoit un appareil virtuel qui contient la somme de ses membres.",
+        "data": {
+          "name": "Nom du groupe",
+          "entity_ids": "Capteurs membres"
+        }
+      },
+      "edit_group": {
+        "title": "Modifier un groupe",
+        "data": {
+          "group_to_edit": "Groupe"
+        }
+      },
+      "group_details": {
+        "title": "Modifier un groupe",
+        "data": {
+          "name": "Nom du groupe",
+          "entity_ids": "Capteurs membres",
+          "remove_group": "Supprimer ce groupe"
+        }
+      }
+    },
+    "error": {
+      "no_targets": "Sélectionnez au moins un capteur individuel ou créez un groupe.",
+      "invalid_sources": "Un ou plusieurs capteurs ne correspondent plus à ce type de source.",
+      "invalid_price": "L'entité de prix sélectionnée doit actuellement contenir un nombre positif ou nul.",
+      "duplicate_group_name": "Un groupe utilise déjà ce nom.",
+      "required": "Ce champ est obligatoire."
+    }
+  },
+  "options": {
+    "step": {
+      "sources": {
+        "title": "Capteurs individuels",
+        "description": "Sélectionnez les capteurs individuels compatibles et, si nécessaire, un prix actuel par {price_unit}. Les groupes se configurent ensuite.",
+        "data": {
+          "source_entity_ids": "Capteurs individuels",
+          "price_entity_id": "Entité du prix unitaire actuel"
+        },
+        "data_description": {
+          "source_entity_ids": "Chaque capteur sélectionné reçoit ses propres capteurs dérivés.",
+          "price_entity_id": "Laissez vide pour ne pas créer de capteurs de coût. Les changements de prix historiques s'appliquent au moment où ils ont eu lieu."
+        }
+      },
+      "source_options": {
+        "title": "Rattachement aux appareils",
+        "description": "Choisissez quels capteurs dérivés individuels appartiennent à l'appareil source.",
+        "data": {
+          "attach_entity_ids": "Rattacher à l'appareil source"
+        }
+      },
+      "manage_groups": {
+        "title": "Groupes",
+        "description": "Ajoutez ou modifiez des groupes nommés, revenez aux capteurs individuels ou enregistrez les changements.",
+        "menu_options": {
+          "add_group": "Ajouter un groupe",
+          "edit_group": "Modifier un groupe",
+          "edit_sources": "Modifier les capteurs individuels",
+          "finish": "Enregistrer les changements"
+        }
+      },
+      "add_group": {
+        "title": "Ajouter un groupe",
+        "description": "Un groupe reçoit un appareil virtuel qui contient la somme de ses membres.",
+        "data": {
+          "name": "Nom du groupe",
+          "entity_ids": "Capteurs membres"
+        }
+      },
+      "edit_group": {
+        "title": "Modifier un groupe",
+        "data": {
+          "group_to_edit": "Groupe"
+        }
+      },
+      "group_details": {
+        "title": "Modifier un groupe",
+        "data": {
+          "name": "Nom du groupe",
+          "entity_ids": "Capteurs membres",
+          "remove_group": "Supprimer ce groupe"
+        }
+      }
+    },
+    "error": {
+      "no_targets": "Sélectionnez au moins un capteur individuel ou créez un groupe.",
+      "invalid_sources": "Un ou plusieurs capteurs ne correspondent plus à ce type de source.",
+      "invalid_price": "L'entité de prix sélectionnée doit actuellement contenir un nombre positif ou nul.",
+      "duplicate_group_name": "Un groupe utilise déjà ce nom.",
+      "required": "Ce champ est obligatoire."
+    }
+  },
+  "selector": {
+    "configuration_type": {
+      "options": {
+        "electricity_energy": "Électricité · énergie cumulée",
+        "electricity_power": "Électricité · puissance instantanée",
+        "water_volume": "Eau · volume cumulé",
+        "water_flow": "Eau · débit instantané",
+        "gas_volume": "Gaz · volume cumulé",
+        "gas_flow": "Gaz · débit instantané"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_total": {
+        "name": "Énergie totale"
+      },
+      "energy_today": {
+        "name": "Énergie aujourd'hui"
+      },
+      "energy_this_week": {
+        "name": "Énergie cette semaine"
+      },
+      "energy_this_month": {
+        "name": "Énergie ce mois-ci"
+      },
+      "energy_this_quarter": {
+        "name": "Énergie ce trimestre"
+      },
+      "energy_this_year": {
+        "name": "Énergie cette année"
+      },
+      "energy_last_24_hours": {
+        "name": "Énergie des 24 dernières heures"
+      },
+      "energy_last_7_days": {
+        "name": "Énergie des 7 derniers jours"
+      },
+      "energy_last_3_months": {
+        "name": "Énergie des 3 derniers mois"
+      },
+      "energy_last_365_days": {
+        "name": "Énergie des 365 derniers jours"
+      },
+      "water_total": {
+        "name": "Volume d'eau total"
+      },
+      "water_today": {
+        "name": "Volume d'eau aujourd'hui"
+      },
+      "water_this_week": {
+        "name": "Volume d'eau cette semaine"
+      },
+      "water_this_month": {
+        "name": "Volume d'eau ce mois-ci"
+      },
+      "water_this_quarter": {
+        "name": "Volume d'eau ce trimestre"
+      },
+      "water_this_year": {
+        "name": "Volume d'eau cette année"
+      },
+      "water_last_24_hours": {
+        "name": "Volume d'eau des 24 dernières heures"
+      },
+      "water_last_7_days": {
+        "name": "Volume d'eau des 7 derniers jours"
+      },
+      "water_last_3_months": {
+        "name": "Volume d'eau des 3 derniers mois"
+      },
+      "water_last_365_days": {
+        "name": "Volume d'eau des 365 derniers jours"
+      },
+      "gas_total": {
+        "name": "Volume de gaz total"
+      },
+      "gas_today": {
+        "name": "Volume de gaz aujourd'hui"
+      },
+      "gas_this_week": {
+        "name": "Volume de gaz cette semaine"
+      },
+      "gas_this_month": {
+        "name": "Volume de gaz ce mois-ci"
+      },
+      "gas_this_quarter": {
+        "name": "Volume de gaz ce trimestre"
+      },
+      "gas_this_year": {
+        "name": "Volume de gaz cette année"
+      },
+      "gas_last_24_hours": {
+        "name": "Volume de gaz des 24 dernières heures"
+      },
+      "gas_last_7_days": {
+        "name": "Volume de gaz des 7 derniers jours"
+      },
+      "gas_last_3_months": {
+        "name": "Volume de gaz des 3 derniers mois"
+      },
+      "gas_last_365_days": {
+        "name": "Volume de gaz des 365 derniers jours"
+      },
+      "cost_total": {
+        "name": "Coût total"
+      },
+      "cost_today": {
+        "name": "Coût aujourd'hui"
+      },
+      "cost_this_week": {
+        "name": "Coût cette semaine"
+      },
+      "cost_this_month": {
+        "name": "Coût ce mois-ci"
+      },
+      "cost_this_quarter": {
+        "name": "Coût ce trimestre"
+      },
+      "cost_this_year": {
+        "name": "Coût cette année"
+      },
+      "cost_last_24_hours": {
+        "name": "Coût des 24 dernières heures"
+      },
+      "cost_last_7_days": {
+        "name": "Coût des 7 derniers jours"
+      },
+      "cost_last_3_months": {
+        "name": "Coût des 3 derniers mois"
+      },
+      "cost_last_365_days": {
+        "name": "Coût des 365 derniers jours"
+      }
+    }
+  }
+}

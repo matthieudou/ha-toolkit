@@ -1,0 +1,39 @@
+[project]
+name = "mattsassistant"
+version = "0.1.0"
+description = "Calendar and rolling utility-meter metrics for Home Assistant"
+license = "MIT"
+requires-python = ">=3.13.2,<3.14"
+
+[dependency-groups]
+dev = [
+  "homeassistant==2026.2.3",
+  "pytest>=8.3",
+  "pytest-homeassistant-custom-component==0.13.316",
+  "ruff>=0.12",
+]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "ANN401",
+  "COM812",
+  "CPY001",
+  "D203",
+  "D213",
+  "EM101",
+  "EM102",
+  "FBT003",
+  "TRY003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["PLR2004", "S101", "SLF001"]

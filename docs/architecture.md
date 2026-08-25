@@ -1,0 +1,88 @@
+# Meter architecture
+
+## Configuration model
+
+One config entry owns one measurement type, one optional price timeline,
+individual sources and named groups:
+
+```python
+{
+    "configuration_type": "electricity_energy",
+    "source_entity_ids": ["sensor.dishwasher_energy"],
+    "attach_entity_ids": ["sensor.dishwasher_energy"],
+    "groups": [
+        {
+            "id": "stable-generated-id",
+            "name": "Housekeeping",
+            "entity_ids": ["sensor.dishwasher_energy"],
+        }
+    ],
+    "price_entity_id": "input_number.electricity_price",
+}
+```
+
+Entity selection is intentional. A device is only an optional registry link for
+derived individual sensors. It is not the measurement boundary because one
+device may expose several independent meters or rate sensors.
+
+Group IDs remain stable when names change. Individual target IDs use the source
+entity registry entry ID when available. Generated sensor unique IDs also
+include the config entry ID, which allows the same source to appear in separate
+pricing configurations. Home Assistant's entity platform treats the source-based
+entity ID as a suggestion, resolves collisions and preserves user renames.
+
+## Measurement normalization
+
+`models.py` maps each configuration type to a `MeasurementSpec`. The spec owns
+the accepted source device class and state classes, Recorder unit class,
+canonical source unit, result unit and result device class.
+
+Cumulative energy and volume statistics become normalized cumulative series
+directly. Hourly mean power in kW is integrated into kWh. Hourly mean volume flow
+in m³/h is integrated into m³. Missing hourly rate statistics break continuity;
+the integration keeps only the newest continuous suffix rather than presenting
+an incomplete interval as complete.
+
+## Module boundaries
+
+`config_flow.py` owns the multi-step UI. It selects a source type first, then
+individual sensors, per-source device links and any number of explicit groups.
+The options flow uses the same steps and keeps group IDs stable.
+
+`discovery.py` is the Home Assistant state and entity-registry boundary. It
+validates configured entities and resolves them into immutable `MeterSource` and
+`MeterTarget` values. It performs no automatic device discovery.
+
+`coordinator.py` owns live state for one physical input. A single
+`MeterSourceRuntime` extends closed Recorder history with the current cumulative
+state or integrates live rate changes. `PriceRuntime` owns the price timeline.
+
+`runtime.py` owns the config-entry lifecycle and shared derived data. It creates
+one runtime per physical source, caches each individual or aggregate target
+series once, and fans changes out to all derived sensor entities. This keeps the
+number of Recorder readers and aggregate calculations independent from the
+number of generated windows.
+
+`periods.py` contains pure calculations. `CumulativeSeries` calculates lifetime,
+civil and rolling totals, combines source series, and derives a cost series from
+a price timeline.
+
+`sensor.py` maps targets and metrics to Home Assistant entities. Requested
+individual entities attach to their existing device after registry creation.
+Each group gets one virtual device.
+
+`recorder.py` is the only module that queries or imports Recorder data. It reads
+closed source hours and price changes, then resumes derived statistics after the
+last imported hour.
+
+`migration.py` is the compatibility boundary for unpublished config-entry
+formats and their entity unique IDs.
+
+## Correctness choices
+
+- Aggregates use only history shared by every member.
+- Recorder failures do not stop live tracking.
+- Open Recorder hours are never backfilled.
+- Rate history with a gap restarts after the gap.
+- Price changes inside an hourly source bucket mark the result as estimated.
+- A group becomes unavailable when any member lacks a usable current series.

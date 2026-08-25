@@ -1,0 +1,174 @@
+{
+  "title": "MattsAssistant",
+  "config": {
+    "step": {
+      "user": {
+        "title": "New meter configuration",
+        "description": "Choose what the source sensors measure.",
+        "data": {"configuration_type": "Source type"}
+      },
+      "sources": {
+        "title": "Individual sensors",
+        "description": "Select compatible individual sensors and, if needed, a current price per {price_unit}. Groups are configured next.",
+        "data": {
+          "source_entity_ids": "Individual sensors",
+          "price_entity_id": "Current unit price entity"
+        },
+        "data_description": {
+          "source_entity_ids": "Each selected sensor receives its own derived sensors.",
+          "price_entity_id": "Leave empty to omit cost sensors. Historical price changes are applied when they occurred."
+        }
+      },
+      "source_options": {
+        "title": "Device links",
+        "description": "Choose which individual derived sensors belong to the source device.",
+        "data": {"attach_entity_ids": "Attach to source device"}
+      },
+      "manage_groups": {
+        "title": "Groups",
+        "description": "Add or edit named groups, return to the individual sensors, or save this configuration.",
+        "menu_options": {
+          "add_group": "Add group",
+          "edit_group": "Edit group",
+          "edit_sources": "Edit individual sensors",
+          "finish": "Save configuration"
+        }
+      },
+      "add_group": {
+        "title": "Add group",
+        "description": "A group receives a virtual device containing the sum of its members.",
+        "data": {"name": "Group name", "entity_ids": "Member sensors"}
+      },
+      "edit_group": {
+        "title": "Edit group",
+        "data": {"group_to_edit": "Group"}
+      },
+      "group_details": {
+        "title": "Edit group",
+        "data": {
+          "name": "Group name",
+          "entity_ids": "Member sensors",
+          "remove_group": "Remove this group"
+        }
+      }
+    },
+    "error": {
+      "no_targets": "Select at least one individual sensor or create a group.",
+      "invalid_sources": "One or more sensors no longer match this source type.",
+      "invalid_price": "The selected price entity must currently contain a non-negative number.",
+      "duplicate_group_name": "A group already uses this name.",
+      "required": "This field is required."
+    }
+  },
+  "options": {
+    "step": {
+      "sources": {
+        "title": "Individual sensors",
+        "description": "Select compatible individual sensors and, if needed, a current price per {price_unit}. Groups are configured next.",
+        "data": {
+          "source_entity_ids": "Individual sensors",
+          "price_entity_id": "Current unit price entity"
+        },
+        "data_description": {
+          "source_entity_ids": "Each selected sensor receives its own derived sensors.",
+          "price_entity_id": "Leave empty to omit cost sensors. Historical price changes are applied when they occurred."
+        }
+      },
+      "source_options": {
+        "title": "Device links",
+        "description": "Choose which individual derived sensors belong to the source device.",
+        "data": {"attach_entity_ids": "Attach to source device"}
+      },
+      "manage_groups": {
+        "title": "Groups",
+        "description": "Add or edit named groups, return to the individual sensors, or save the changes.",
+        "menu_options": {
+          "add_group": "Add group",
+          "edit_group": "Edit group",
+          "edit_sources": "Edit individual sensors",
+          "finish": "Save changes"
+        }
+      },
+      "add_group": {
+        "title": "Add group",
+        "description": "A group receives a virtual device containing the sum of its members.",
+        "data": {"name": "Group name", "entity_ids": "Member sensors"}
+      },
+      "edit_group": {
+        "title": "Edit group",
+        "data": {"group_to_edit": "Group"}
+      },
+      "group_details": {
+        "title": "Edit group",
+        "data": {
+          "name": "Group name",
+          "entity_ids": "Member sensors",
+          "remove_group": "Remove this group"
+        }
+      }
+    },
+    "error": {
+      "no_targets": "Select at least one individual sensor or create a group.",
+      "invalid_sources": "One or more sensors no longer match this source type.",
+      "invalid_price": "The selected price entity must currently contain a non-negative number.",
+      "duplicate_group_name": "A group already uses this name.",
+      "required": "This field is required."
+    }
+  },
+  "selector": {
+    "configuration_type": {
+      "options": {
+        "electricity_energy": "Electricity · cumulative energy",
+        "electricity_power": "Electricity · instantaneous power",
+        "water_volume": "Water · cumulative volume",
+        "water_flow": "Water · instantaneous flow",
+        "gas_volume": "Gas · cumulative volume",
+        "gas_flow": "Gas · instantaneous flow"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_total": {"name": "Total energy"},
+      "energy_today": {"name": "Energy today"},
+      "energy_this_week": {"name": "Energy this week"},
+      "energy_this_month": {"name": "Energy this month"},
+      "energy_this_quarter": {"name": "Energy this quarter"},
+      "energy_this_year": {"name": "Energy this year"},
+      "energy_last_24_hours": {"name": "Energy over the last 24 hours"},
+      "energy_last_7_days": {"name": "Energy over the last 7 days"},
+      "energy_last_3_months": {"name": "Energy over the last 3 months"},
+      "energy_last_365_days": {"name": "Energy over the last 365 days"},
+      "water_total": {"name": "Total water volume"},
+      "water_today": {"name": "Water volume today"},
+      "water_this_week": {"name": "Water volume this week"},
+      "water_this_month": {"name": "Water volume this month"},
+      "water_this_quarter": {"name": "Water volume this quarter"},
+      "water_this_year": {"name": "Water volume this year"},
+      "water_last_24_hours": {"name": "Water volume over the last 24 hours"},
+      "water_last_7_days": {"name": "Water volume over the last 7 days"},
+      "water_last_3_months": {"name": "Water volume over the last 3 months"},
+      "water_last_365_days": {"name": "Water volume over the last 365 days"},
+      "gas_total": {"name": "Total gas volume"},
+      "gas_today": {"name": "Gas volume today"},
+      "gas_this_week": {"name": "Gas volume this week"},
+      "gas_this_month": {"name": "Gas volume this month"},
+      "gas_this_quarter": {"name": "Gas volume this quarter"},
+      "gas_this_year": {"name": "Gas volume this year"},
+      "gas_last_24_hours": {"name": "Gas volume over the last 24 hours"},
+      "gas_last_7_days": {"name": "Gas volume over the last 7 days"},
+      "gas_last_3_months": {"name": "Gas volume over the last 3 months"},
+      "gas_last_365_days": {"name": "Gas volume over the last 365 days"},
+      "cost_total": {"name": "Total cost"},
+      "cost_today": {"name": "Cost today"},
+      "cost_this_week": {"name": "Cost this week"},
+      "cost_this_month": {"name": "Cost this month"},
+      "cost_this_quarter": {"name": "Cost this quarter"},
+      "cost_this_year": {"name": "Cost this year"},
+      "cost_last_24_hours": {"name": "Cost over the last 24 hours"},
+      "cost_last_7_days": {"name": "Cost over the last 7 days"},
+      "cost_last_3_months": {"name": "Cost over the last 3 months"},
+      "cost_last_365_days": {"name": "Cost over the last 365 days"}
+    }
+  }
+}
