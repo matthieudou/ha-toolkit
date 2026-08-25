@@ -21,9 +21,10 @@ individual sources and named groups:
 }
 ```
 
-Entity selection is intentional. A device is only an optional registry link for
-derived individual sensors. It is not the measurement boundary because one
-device may expose several independent meters or rate sensors.
+Entity selection is intentional. Every individual source is represented by a
+virtual meter device. When requested, that device links to the physical source
+through `via_device`. The physical device is not the measurement boundary
+because it may expose several independent meters or rate sensors.
 
 Group IDs remain stable when names change. Individual target IDs use the source
 entity registry entry ID when available. Generated sensor unique IDs also
@@ -67,9 +68,9 @@ number of generated windows.
 civil and rolling totals, combines source series, and derives a cost series from
 a price timeline.
 
-`sensor.py` maps targets and metrics to Home Assistant entities. Requested
-individual entities attach to their existing device after registry creation.
-Each group gets one virtual device.
+`sensor.py` maps targets and metrics to Home Assistant entities. Each individual
+source and each group gets a virtual device. An individual virtual device may
+link to its physical source device as its parent.
 
 `recorder.py` is the only module that queries or imports Recorder data. It reads
 closed source hours and price changes, then resumes derived statistics after the

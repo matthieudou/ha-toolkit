@@ -102,7 +102,15 @@ async def test_setup_creates_ten_sensors_with_source_based_entity_ids(
         item for item in er.async_get(hass).entities.values() if item.platform == DOMAIN
     ]
     assert len(generated) == 10
-    assert {item.device_id for item in generated} == {device_id}
+    virtual_device_ids = {item.device_id for item in generated}
+    assert None not in virtual_device_ids
+    assert len(virtual_device_ids) == 1
+    virtual_device_id = next(iter(virtual_device_ids))
+    virtual_device = dr.async_get(hass).async_get(virtual_device_id)
+    assert virtual_device is not None
+    assert virtual_device.name == "kitchen dishwasher energy"
+    assert virtual_device.via_device_id == device_id
+    assert entry.entry_id in virtual_device.config_entries
     assert "sensor.kitchen_dishwasher_energy_this_year" in {
         item.entity_id for item in generated
     }
@@ -130,7 +138,27 @@ async def test_setup_creates_ten_sensors_with_source_based_entity_ids(
     generated = [
         item for item in er.async_get(hass).entities.values() if item.platform == DOMAIN
     ]
-    assert {item.device_id for item in generated} == {None}
+    assert {item.device_id for item in generated} == {virtual_device_id}
+    virtual_device = dr.async_get(hass).async_get(virtual_device_id)
+    assert virtual_device is not None
+    assert virtual_device.via_device_id is None
+
+    with patch(
+        "custom_components.mattsassistant.sensor.async_backfill_statistics",
+        AsyncMock(return_value=0),
+    ):
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                CONF_SOURCE_ENTITY_IDS: [],
+                CONF_ATTACH_ENTITY_IDS: [],
+            },
+        )
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    assert dr.async_get(hass).async_get(virtual_device_id) is None
 
 
 async def test_group_with_price_creates_virtual_device_and_cost_sensors(

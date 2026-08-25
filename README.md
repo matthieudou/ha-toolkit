@@ -20,11 +20,12 @@ Sources are selected as sensor entities, not devices. This supports devices with
 several channels, such as a two-valve water controller or a multi-socket power
 strip. A source device does not need a `switch` entity.
 
-An individual source receives its own derived sensors. By default, those sensors
-attach to the source device, but this can be disabled per source. Named groups
-create virtual MattsAssistant devices containing the sum of their selected
-members. A source may belong to any number of groups and does not need to be
-selected as an individual source.
+An individual source receives a virtual MattsAssistant meter containing its
+derived sensors. By default, the meter is linked below the physical source
+device, but it can remain standalone. Named groups create virtual
+MattsAssistant devices containing the sum of their selected members. A source
+may belong to any number of groups and does not need to be selected as an
+individual source.
 
 Create separate config entries when sources use different prices or represent
 different source types.

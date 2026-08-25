@@ -89,14 +89,29 @@ class MattsAssistantSensor(SensorEntity):
 
     def _set_device_info(self) -> None:
         target = self.runtime.target
-        if target.kind is TargetKind.GROUP:
-            entry_prefix = f"{self.runtime.entry_id}_" if self.runtime.entry_id else ""
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"{entry_prefix}{target.key}")},
-                name=target.name,
-                manufacturer=NAME,
-                model=f"{target.sources[0].configuration_type.value} group",
-            )
+        entry_prefix = f"{self.runtime.entry_id}_" if self.runtime.entry_id else ""
+        device_type = "group" if target.kind is TargetKind.GROUP else "meter"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry_prefix}{target.key}")},
+            name=target.name,
+            manufacturer=NAME,
+            model=f"{target.sources[0].configuration_type.value} {device_type}",
+            via_device=self._source_via_device(),
+        )
+
+    def _source_via_device(self) -> tuple[str, str] | None:
+        """Return a stable parent identifier for a linked individual meter."""
+        target = self.runtime.target
+        if (
+            target.kind is not TargetKind.SOURCE
+            or not target.attach_to_device
+            or not target.device_id
+        ):
+            return None
+        source_device = dr.async_get(self.runtime.hass).async_get(target.device_id)
+        if source_device is None or not source_device.identifiers:
+            return None
+        return min(source_device.identifiers)
 
     @property
     def _series(self) -> CumulativeSeries | None:
@@ -161,16 +176,6 @@ class MattsAssistantSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Attach requested physical metrics and resume statistics backfill."""
         await super().async_added_to_hass()
-        target = self.runtime.target
-        if target.kind is TargetKind.SOURCE:
-            registry = er.async_get(self.hass)
-            if registry.async_get(self.entity_id):
-                device_id = (
-                    target.device_id
-                    if target.attach_to_device and target.device_id
-                    else None
-                )
-                registry.async_update_entity(self.entity_id, device_id=device_id)
         self.async_on_remove(self.runtime.async_add_listener(self._handle_update))
         backfill = self._async_backfill()
         name = f"Backfill statistics for {self.entity_id}"
@@ -243,7 +248,7 @@ def _window_type(metric: Metric) -> str:
 def _remove_stale_registry_entries(
     entry: ConfigEntry, entities: list[MattsAssistantSensor]
 ) -> None:
-    """Remove generated entities and group devices no longer in the config."""
+    """Remove generated entities and virtual devices no longer in the config."""
     hass = entry.runtime_data.hass
     entity_registry = er.async_get(hass)
     expected_unique_ids = {entity.unique_id for entity in entities}
@@ -255,13 +260,33 @@ def _remove_stale_registry_entries(
         ):
             entity_registry.async_remove(registry_entry.entity_id)
 
-    expected_group_identifiers = {
+    expected_device_identifiers = {
         identifier
         for entity in entities
         if entity.device_info
         for identifier in entity.device_info.get("identifiers", set())
     }
     device_registry = dr.async_get(hass)
+    for entity in entities:
+        device_info = entity.device_info
+        if not device_info:
+            continue
+        identifiers = set(device_info.get("identifiers", set()))
+        device = device_registry.async_get_device(identifiers=identifiers)
+        if device is None:
+            continue
+        via_device = device_info.get("via_device")
+        parent = (
+            device_registry.async_get_device(identifiers={via_device})
+            if via_device
+            else None
+        )
+        desired_parent_id = parent.id if parent else None
+        if device.via_device_id != desired_parent_id:
+            device_registry.async_update_device(
+                device.id, via_device_id=desired_parent_id
+            )
+
     for device in list(device_registry.devices.values()):
         integration_identifiers = {
             identifier for identifier in device.identifiers if identifier[0] == DOMAIN
@@ -269,6 +294,6 @@ def _remove_stale_registry_entries(
         if (
             entry.entry_id in device.config_entries
             and integration_identifiers
-            and integration_identifiers.isdisjoint(expected_group_identifiers)
+            and integration_identifiers.isdisjoint(expected_device_identifiers)
         ):
             device_registry.async_remove_device(device.id)

@@ -20,7 +20,7 @@
         },
         "data_description": {
           "source_entity_ids": "Chaque capteur sélectionné reçoit ses propres capteurs dérivés.",
-          "detach_entity_ids": "Par défaut, les capteurs dérivés sont rattachés à l'appareil source. Sélectionnez ici les exceptions.",
+          "detach_entity_ids": "Par défaut, chaque compteur virtuel est lié sous son appareil source. Sélectionnez ici les compteurs autonomes.",
           "groups": "Chaque groupe nommé reçoit un appareil virtuel contenant la somme de ses membres.",
           "price_entity_id": "Laissez vide pour ne pas créer de capteurs de coût. Les changements de prix historiques s'appliquent au moment où ils ont eu lieu."
         }
@@ -99,7 +99,7 @@
         },
         "data_description": {
           "source_entity_ids": "Chaque capteur sélectionné reçoit ses propres capteurs dérivés.",
-          "detach_entity_ids": "Par défaut, les capteurs dérivés sont rattachés à l'appareil source. Sélectionnez ici les exceptions.",
+          "detach_entity_ids": "Par défaut, chaque compteur virtuel est lié sous son appareil source. Sélectionnez ici les compteurs autonomes.",
           "groups": "Chaque groupe nommé reçoit un appareil virtuel contenant la somme de ses membres.",
           "price_entity_id": "Laissez vide pour ne pas créer de capteurs de coût. Les changements de prix historiques s'appliquent au moment où ils ont eu lieu."
         }

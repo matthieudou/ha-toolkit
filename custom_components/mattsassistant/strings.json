@@ -18,7 +18,7 @@
         },
         "data_description": {
           "source_entity_ids": "Each selected sensor receives its own derived sensors.",
-          "detach_entity_ids": "By default, derived sensors are attached to their source device. Select exceptions here.",
+          "detach_entity_ids": "By default, each virtual meter is linked below its source device. Select standalone meters here.",
           "groups": "Each named group receives a virtual device containing the sum of its members.",
           "price_entity_id": "Leave empty to omit cost sensors. Historical price changes are applied when they occurred."
         }
@@ -90,7 +90,7 @@
         },
         "data_description": {
           "source_entity_ids": "Each selected sensor receives its own derived sensors.",
-          "detach_entity_ids": "By default, derived sensors are attached to their source device. Select exceptions here.",
+          "detach_entity_ids": "By default, each virtual meter is linked below its source device. Select standalone meters here.",
           "groups": "Each named group receives a virtual device containing the sum of its members.",
           "price_entity_id": "Leave empty to omit cost sensors. Historical price changes are applied when they occurred."
         }

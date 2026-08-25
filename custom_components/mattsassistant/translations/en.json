@@ -15,6 +15,12 @@
           "detach_entity_ids": "Keep separate from the source device",
           "groups": "Groups",
           "price_entity_id": "Current unit price entity"
+        },
+        "data_description": {
+          "source_entity_ids": "Each selected sensor receives its own virtual meter and derived sensors.",
+          "detach_entity_ids": "By default, each virtual meter is linked below its source device. Select standalone meters here.",
+          "groups": "Each named group receives a virtual device containing the sum of its members.",
+          "price_entity_id": "Leave empty to omit cost sensors. Historical price changes are applied when they occurred."
         }
       },
       "sources": {
@@ -81,6 +87,12 @@
           "detach_entity_ids": "Keep separate from the source device",
           "groups": "Groups",
           "price_entity_id": "Current unit price entity"
+        },
+        "data_description": {
+          "source_entity_ids": "Each selected sensor receives its own virtual meter and derived sensors.",
+          "detach_entity_ids": "By default, each virtual meter is linked below its source device. Select standalone meters here.",
+          "groups": "Each named group receives a virtual device containing the sum of its members.",
+          "price_entity_id": "Leave empty to omit cost sensors. Historical price changes are applied when they occurred."
         }
       },
       "sources": {
