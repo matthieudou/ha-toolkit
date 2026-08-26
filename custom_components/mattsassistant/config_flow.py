@@ -27,7 +27,9 @@ from .models import MEASUREMENT_SPECS, ConfigurationType, MeterGroup
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
-CONF_DETACH_ENTITY_IDS = "detach_entity_ids"
+CONF_ENTITY_ID = "entity_id"
+CONF_INDIVIDUAL_SOURCES = "individual_sources"
+CONF_KEEP_SEPARATE = "keep_separate"
 
 
 class _MeterFlowMixin:
@@ -58,8 +60,13 @@ class _MeterFlowMixin:
         """Edit sources, device links, groups, and pricing on one page."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            sources = list(user_input.get(CONF_SOURCE_ENTITY_IDS, []))
-            detached = set(user_input.get(CONF_DETACH_ENTITY_IDS, []))
+            submitted_sources = user_input.get(CONF_INDIVIDUAL_SOURCES, [])
+            individual_sources = (
+                submitted_sources
+                if isinstance(submitted_sources, list)
+                else [submitted_sources]
+            )
+            sources = [row.get(CONF_ENTITY_ID) for row in individual_sources]
             price_entity_id = user_input.get(CONF_PRICE_ENTITY_ID)
             submitted_groups = list(user_input.get(CONF_GROUPS, []))
             group_sources = [
@@ -74,8 +81,8 @@ class _MeterFlowMixin:
                 self.hass, [*sources, *group_sources], self._configuration_type
             ):
                 errors["base"] = "invalid_sources"
-            elif detached.difference(sources):
-                errors[CONF_DETACH_ENTITY_IDS] = "invalid_detached_sources"
+            elif len(sources) != len(set(sources)):
+                errors[CONF_INDIVIDUAL_SOURCES] = "duplicate_source"
             elif price_entity_id and not _valid_price_entity(
                 self.hass, price_entity_id
             ):
@@ -89,8 +96,11 @@ class _MeterFlowMixin:
                     self._source_entity_ids = sources
                     self._attach_entity_ids = [
                         entity_id
-                        for entity_id in sources
-                        if entity_id in attachable and entity_id not in detached
+                        for entity_id, row in zip(
+                            sources, individual_sources, strict=True
+                        )
+                        if entity_id in attachable
+                        and not row.get(CONF_KEEP_SEPARATE, False)
                     ]
                     self._groups = groups
                     self._price_entity_id = price_entity_id
@@ -129,7 +139,7 @@ class MattsAssistantConfigFlow(
 ):
     """Configure one type of meter and its aggregates."""
 
-    VERSION = 3
+    VERSION = 4
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -210,13 +220,14 @@ def _configuration_schema(
     defaults = user_input or {}
     source_entity_ids = list(configuration.get(CONF_SOURCE_ENTITY_IDS, []))
     attach_entity_ids = list(configuration.get(CONF_ATTACH_ENTITY_IDS, []))
-    sources = defaults.get(CONF_SOURCE_ENTITY_IDS, source_entity_ids)
-    detached = defaults.get(
-        CONF_DETACH_ENTITY_IDS,
+    individual_sources = defaults.get(
+        CONF_INDIVIDUAL_SOURCES,
         [
-            entity_id
+            {
+                CONF_ENTITY_ID: entity_id,
+                CONF_KEEP_SEPARATE: entity_id not in attach_entity_ids,
+            }
             for entity_id in source_entity_ids
-            if entity_id not in attach_entity_ids
         ],
     )
     group_defaults = defaults.get(
@@ -230,11 +241,25 @@ def _configuration_schema(
         ],
     )
     fields: dict[Any, Any] = {
-        vol.Optional(CONF_SOURCE_ENTITY_IDS, default=sources): _source_selector(
-            configuration_type
-        ),
-        vol.Optional(CONF_DETACH_ENTITY_IDS, default=detached): _source_selector(
-            configuration_type
+        vol.Optional(
+            CONF_INDIVIDUAL_SOURCES, default=individual_sources
+        ): selector.ObjectSelector(
+            selector.ObjectSelectorConfig(
+                multiple=True,
+                label_field=CONF_ENTITY_ID,
+                translation_key="individual_source",
+                fields={
+                    CONF_ENTITY_ID: {
+                        "required": True,
+                        "selector": _source_selector(
+                            configuration_type, multiple=False
+                        ).serialize()["selector"],
+                    },
+                    CONF_KEEP_SEPARATE: {
+                        "selector": selector.BooleanSelector().serialize()["selector"]
+                    },
+                },
+            )
         ),
         vol.Optional(CONF_GROUPS, default=group_defaults): selector.ObjectSelector(
             selector.ObjectSelectorConfig(
@@ -273,15 +298,17 @@ def _configuration_schema(
     return vol.Schema(fields)
 
 
-def _source_selector(configuration_type: ConfigurationType) -> selector.EntitySelector:
+def _source_selector(
+    configuration_type: ConfigurationType, *, multiple: bool = True
+) -> selector.EntitySelector:
     spec = MEASUREMENT_SPECS[configuration_type]
     return selector.EntitySelector(
         selector.EntitySelectorConfig(
             filter=selector.EntityFilterSelectorConfig(
                 domain="sensor", device_class=spec.source_device_class
             ),
-            multiple=True,
-            reorder=True,
+            multiple=multiple,
+            reorder=multiple,
         )
     )
 

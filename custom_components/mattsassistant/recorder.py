@@ -21,8 +21,10 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     statistics_during_period,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
+from .const import DOMAIN
 from .models import MeterSource, SourceMode
 from .periods import CumulativeSample, CumulativeSeries, Metric, PriceSample
 
@@ -47,6 +49,25 @@ class LastStatistic:
     start: datetime
     state: float
     total: float
+
+
+async def async_clear_derived_statistics(
+    hass: HomeAssistant, config_entry_id: str
+) -> None:
+    """Clear this entry's derived statistics before a corrected full backfill."""
+    statistic_ids = [
+        entry.entity_id
+        for entry in er.async_get(hass).entities.values()
+        if entry.platform == DOMAIN and entry.config_entry_id == config_entry_id
+    ]
+    if not statistic_ids:
+        return
+    cleared = hass.loop.create_future()
+    get_instance(hass).async_clear_statistics(
+        statistic_ids,
+        on_done=lambda: hass.loop.call_soon_threadsafe(cleared.set_result, None),
+    )
+    await cleared
 
 
 async def async_get_source_samples(
@@ -202,24 +223,23 @@ async def async_backfill_statistics(
     }
     if "unit_class" in StatisticMetaData.__annotations__:
         metadata["unit_class"] = unit_class
-    previous_state = last.state if last else None
-    cumulative_sum = last.total if last else 0.0
-    statistics: list[StatisticData] = []
-    for value in values:
-        if previous_state is None:
-            cumulative_sum = value.value
-        elif value.value >= previous_state:
-            cumulative_sum += value.value - previous_state
-        else:
-            cumulative_sum += value.value
-        statistics.append(
-            {
-                "start": value.start,
-                "state": value.value,
-                "sum": round(cumulative_sum, 8),
-            }
-        )
-        previous_state = value.value
+    if last:
+        baseline_state = last.state
+        baseline_sum = last.total
+    else:
+        # Recorder starts short-term TOTAL statistics at zero when the entity
+        # first appears. Anchor the latest imported hour to the same zero point
+        # so live five-minute statistics continue without a discontinuity.
+        baseline_state = values[-1].value
+        baseline_sum = 0.0
+    statistics: list[StatisticData] = [
+        {
+            "start": value.start,
+            "state": value.value,
+            "sum": round(baseline_sum + value.value - baseline_state, 8),
+        }
+        for value in values
+    ]
     async_import_statistics(hass, metadata, statistics)
     _LOGGER.info("Backfilled %s hourly statistics for %s", len(statistics), entity_id)
     return len(statistics)

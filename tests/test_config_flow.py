@@ -9,7 +9,11 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.mattsassistant.config_flow import CONF_DETACH_ENTITY_IDS
+from custom_components.mattsassistant.config_flow import (
+    CONF_ENTITY_ID,
+    CONF_INDIVIDUAL_SOURCES,
+    CONF_KEEP_SEPARATE,
+)
 from custom_components.mattsassistant.const import (
     CONF_ATTACH_ENTITY_IDS,
     CONF_CONFIGURATION_TYPE,
@@ -71,8 +75,9 @@ async def test_user_flow_stores_all_settings_from_one_page(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_SOURCE_ENTITY_IDS: [entity_id],
-            CONF_DETACH_ENTITY_IDS: [],
+            CONF_INDIVIDUAL_SOURCES: [
+                {CONF_ENTITY_ID: entity_id, CONF_KEEP_SEPARATE: False}
+            ],
             CONF_GROUPS: [
                 {
                     CONF_GROUP_NAME: "Housekeeping",
@@ -101,7 +106,9 @@ async def test_flow_rejects_a_non_numeric_price(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_SOURCE_ENTITY_IDS: [entity_id],
+            CONF_INDIVIDUAL_SOURCES: [
+                {CONF_ENTITY_ID: entity_id, CONF_KEEP_SEPARATE: False}
+            ],
             CONF_PRICE_ENTITY_ID: "input_number.electricity_price",
         },
     )
@@ -138,7 +145,7 @@ async def test_options_flow_is_one_page_and_preserves_group_id(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            CONF_SOURCE_ENTITY_IDS: [],
+            CONF_INDIVIDUAL_SOURCES: [],
             CONF_GROUPS: [
                 {
                     CONF_GROUP_NAME: "New name",
@@ -149,6 +156,51 @@ async def test_options_flow_is_one_page_and_preserves_group_id(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_GROUPS][0]["id"] == "stable-id"
+
+
+async def test_options_flow_projects_existing_device_links_into_rows(
+    recorder_mock: object, enable_custom_integrations: None, hass: HomeAssistant
+) -> None:
+    """Legacy storage is exposed as editable individual-source rows."""
+    del recorder_mock, enable_custom_integrations
+    entity_id = _add_energy_source(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_CONFIGURATION_TYPE: ConfigurationType.ELECTRICITY_ENERGY.value,
+            CONF_SOURCE_ENTITY_IDS: [entity_id],
+            CONF_ATTACH_ENTITY_IDS: [],
+            CONF_GROUPS: [],
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    schema = result["data_schema"].schema
+    individual_field = next(
+        field for field in schema if field.schema == CONF_INDIVIDUAL_SOURCES
+    )
+    assert individual_field.default() == [
+        {CONF_ENTITY_ID: entity_id, CONF_KEEP_SEPARATE: True}
+    ]
+
+
+async def test_flow_rejects_duplicate_individual_sources(
+    recorder_mock: object, enable_custom_integrations: None, hass: HomeAssistant
+) -> None:
+    """One source cannot create the same derived meter twice."""
+    del recorder_mock, enable_custom_integrations
+    entity_id = _add_energy_source(hass)
+    result = await _start_flow(hass)
+    row = {CONF_ENTITY_ID: entity_id, CONF_KEEP_SEPARATE: False}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_INDIVIDUAL_SOURCES: [row, row]}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_INDIVIDUAL_SOURCES: "duplicate_source"}
 
 
 async def test_flow_requires_an_individual_sensor_or_group(

@@ -9,23 +9,32 @@ from .const import (
     CONF_CONFIGURATION_TYPE,
     CONF_GROUPS,
     CONF_PRICE_ENTITY_ID,
+    CONF_REBUILD_STATISTICS,
     CONF_SOURCE_ENTITY_IDS,
     PLATFORMS,
 )
 from .migration import migrate_legacy_configuration
 from .models import ConfigurationType, MeterGroup
+from .recorder import async_clear_derived_statistics
 from .runtime import MattsAssistantRuntimeData
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
-CONFIG_ENTRY_VERSION = 3
+CONFIG_ENTRY_VERSION = 4
+LEGACY_CONFIGURATION_VERSION = 3
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MattsAssistant from a config entry."""
     config = {**entry.data, **entry.options}
+    if config.get(CONF_REBUILD_STATISTICS):
+        await async_clear_derived_statistics(hass, entry.entry_id)
+        data = dict(entry.data)
+        data.pop(CONF_REBUILD_STATISTICS, None)
+        hass.config_entries.async_update_entry(entry, data=data)
+        config.pop(CONF_REBUILD_STATISTICS, None)
     runtime_data = MattsAssistantRuntimeData(
         hass=hass,
         entry=entry,
@@ -54,7 +63,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate selections from the unpublished energy-only prototypes."""
     if entry.version >= CONFIG_ENTRY_VERSION:
         return True
-    data = migrate_legacy_configuration(hass, entry)
+    data = (
+        migrate_legacy_configuration(hass, entry)
+        if entry.version < LEGACY_CONFIGURATION_VERSION
+        else {**entry.data, **entry.options}
+    )
+    data[CONF_REBUILD_STATISTICS] = True
     hass.config_entries.async_update_entry(
         entry, data=data, options={}, version=CONFIG_ENTRY_VERSION
     )

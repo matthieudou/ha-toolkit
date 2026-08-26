@@ -9,8 +9,10 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.mattsassistant import async_migrate_entry
 from custom_components.mattsassistant.const import (
+    CONF_ATTACH_ENTITY_IDS,
     CONF_CONFIGURATION_TYPE,
     CONF_DEVICE_IDS,
+    CONF_REBUILD_STATISTICS,
     CONF_SOURCE_ENTITY_IDS,
     DOMAIN,
 )
@@ -69,3 +71,33 @@ async def test_migration_preserves_existing_entity_id_and_unique_id_history(
         ConfigurationType.ELECTRICITY_ENERGY.value
     )
     assert config_entry.data[CONF_SOURCE_ENTITY_IDS] == [source.entity_id]
+    assert config_entry.data[CONF_REBUILD_STATISTICS] is True
+    assert config_entry.version == 4
+
+
+async def test_version_three_migration_preserves_effective_options(
+    hass: HomeAssistant,
+) -> None:
+    """The statistics repair must not restore settings superseded by options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=3,
+        data={
+            CONF_CONFIGURATION_TYPE: ConfigurationType.ELECTRICITY_ENERGY.value,
+            CONF_SOURCE_ENTITY_IDS: ["sensor.old"],
+            CONF_ATTACH_ENTITY_IDS: ["sensor.old"],
+        },
+        options={
+            CONF_CONFIGURATION_TYPE: ConfigurationType.ELECTRICITY_ENERGY.value,
+            CONF_SOURCE_ENTITY_IDS: ["sensor.current"],
+            CONF_ATTACH_ENTITY_IDS: [],
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await async_migrate_entry(hass, config_entry)
+
+    assert config_entry.data[CONF_SOURCE_ENTITY_IDS] == ["sensor.current"]
+    assert config_entry.data[CONF_ATTACH_ENTITY_IDS] == []
+    assert config_entry.options == {}
+    assert config_entry.data[CONF_REBUILD_STATISTICS] is True

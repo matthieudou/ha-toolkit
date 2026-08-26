@@ -79,7 +79,9 @@ attributes describe the current result.
 1. Add this repository as a custom HACS repository with category `Integration`.
 2. Install MattsAssistant and restart Home Assistant.
 3. Add MattsAssistant from **Settings > Devices & services**.
-4. Choose a source type, individual sensors, named groups and an optional price.
+4. Choose a source type, then add individual sensor rows and named groups. Each
+   individual row can keep its virtual meter separate from the source device.
+   You can also select an optional current price.
 
 The minimum supported Home Assistant version is 2026.2.
 

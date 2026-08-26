@@ -15,6 +15,7 @@ CONF_GROUP_ID = "id"
 CONF_GROUP_NAME = "name"
 CONF_GROUP_ENTITY_IDS = "entity_ids"
 CONF_PRICE_ENTITY_ID = "price_entity_id"
+CONF_REBUILD_STATISTICS = "rebuild_statistics"
 
 # Config-flow-only fields.
 CONF_GROUP_TO_EDIT = "group_to_edit"

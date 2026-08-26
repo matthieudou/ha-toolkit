@@ -11,14 +11,12 @@
         "title": "Meter configuration",
         "description": "Configure individual sensors, groups, device links, and an optional current price per {price_unit}.",
         "data": {
-          "source_entity_ids": "Individual sensors",
-          "detach_entity_ids": "Keep separate from the source device",
+          "individual_sources": "Individual sensors",
           "groups": "Groups",
           "price_entity_id": "Current unit price entity"
         },
         "data_description": {
-          "source_entity_ids": "Each selected sensor receives its own derived sensors.",
-          "detach_entity_ids": "By default, each virtual meter is linked below its source device. Select standalone meters here.",
+          "individual_sources": "Add each sensor and choose whether its virtual meter stays separate from the source device.",
           "groups": "Each named group receives a virtual device containing the sum of its members.",
           "price_entity_id": "Leave empty to omit cost sensors. Historical price changes are applied when they occurred."
         }
@@ -71,7 +69,7 @@
     "error": {
       "no_targets": "Select at least one individual sensor or create a group.",
       "invalid_sources": "One or more sensors no longer match this source type.",
-      "invalid_detached_sources": "Only selected individual sensors can be kept separate from their source device.",
+      "duplicate_source": "An individual sensor can only be added once.",
       "invalid_price": "The selected price entity must currently contain a non-negative number.",
       "duplicate_group_name": "A group already uses this name.",
       "required": "This field is required."
@@ -83,14 +81,12 @@
         "title": "Meter configuration",
         "description": "Configure individual sensors, groups, device links, and an optional current price per {price_unit}.",
         "data": {
-          "source_entity_ids": "Individual sensors",
-          "detach_entity_ids": "Keep separate from the source device",
+          "individual_sources": "Individual sensors",
           "groups": "Groups",
           "price_entity_id": "Current unit price entity"
         },
         "data_description": {
-          "source_entity_ids": "Each selected sensor receives its own derived sensors.",
-          "detach_entity_ids": "By default, each virtual meter is linked below its source device. Select standalone meters here.",
+          "individual_sources": "Add each sensor and choose whether its virtual meter stays separate from the source device.",
           "groups": "Each named group receives a virtual device containing the sum of its members.",
           "price_entity_id": "Leave empty to omit cost sensors. Historical price changes are applied when they occurred."
         }
@@ -143,13 +139,19 @@
     "error": {
       "no_targets": "Select at least one individual sensor or create a group.",
       "invalid_sources": "One or more sensors no longer match this source type.",
-      "invalid_detached_sources": "Only selected individual sensors can be kept separate from their source device.",
+      "duplicate_source": "An individual sensor can only be added once.",
       "invalid_price": "The selected price entity must currently contain a non-negative number.",
       "duplicate_group_name": "A group already uses this name.",
       "required": "This field is required."
     }
   },
   "selector": {
+    "individual_source": {
+      "fields": {
+        "entity_id": {"name": "Sensor"},
+        "keep_separate": {"name": "Keep separate from the source device"}
+      }
+    },
     "configuration_type": {
       "options": {
         "electricity_energy": "Electricity · cumulative energy",
