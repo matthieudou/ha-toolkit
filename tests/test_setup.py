@@ -1,15 +1,17 @@
 """Integration-level setup tests."""
 
+import asyncio
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfEnergy
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, UnitOfEnergy
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.mattsassistant import async_setup_entry, async_unload_entry
 from custom_components.mattsassistant.const import (
     CONF_ATTACH_ENTITY_IDS,
     CONF_CONFIGURATION_TYPE,
@@ -18,6 +20,7 @@ from custom_components.mattsassistant.const import (
     CONF_GROUP_NAME,
     CONF_GROUPS,
     CONF_PRICE_ENTITY_ID,
+    CONF_REBUILD_STATISTICS,
     CONF_SOURCE_ENTITY_IDS,
     DOMAIN,
 )
@@ -64,6 +67,106 @@ def _add_source(hass: HomeAssistant) -> tuple[str, str]:
         },
     )
     return entry.entity_id, device.id
+
+
+async def test_statistics_rebuild_waits_until_home_assistant_started(
+    hass: HomeAssistant,
+) -> None:
+    """A one-time repair must not wait on Recorder during startup."""
+    hass.set_state(CoreState.starting)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="configuration",
+        version=4,
+        data={
+            CONF_CONFIGURATION_TYPE: ConfigurationType.ELECTRICITY_ENERGY.value,
+            CONF_SOURCE_ENTITY_IDS: [],
+            CONF_ATTACH_ENTITY_IDS: [],
+            CONF_GROUPS: [],
+            CONF_REBUILD_STATISTICS: True,
+        },
+    )
+    entry.add_to_hass(hass)
+    clear_started = asyncio.Event()
+    allow_clear = asyncio.Event()
+    repair_finished = asyncio.Event()
+
+    async def clear_statistics(_hass: HomeAssistant, _entry_id: str) -> None:
+        clear_started.set()
+        await allow_clear.wait()
+
+    async def reload_entry(_entry_id: str) -> None:
+        assert await async_unload_entry(hass, entry)
+        repair_finished.set()
+
+    with (
+        patch(
+            "custom_components.mattsassistant.async_clear_derived_statistics",
+            side_effect=clear_statistics,
+        ) as clear_statistics_mock,
+        patch.object(
+            hass.config_entries, "async_reload", side_effect=reload_entry
+        ) as reload_mock,
+    ):
+        async with asyncio.timeout(1):
+            assert await async_setup_entry(hass, entry)
+        clear_statistics_mock.assert_not_awaited()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await clear_started.wait()
+        assert entry.data[CONF_REBUILD_STATISTICS] is True
+
+        allow_clear.set()
+        async with asyncio.timeout(1):
+            await repair_finished.wait()
+
+    clear_statistics_mock.assert_awaited_once_with(hass, entry.entry_id)
+    assert CONF_REBUILD_STATISTICS not in entry.data
+    reload_mock.assert_awaited_once_with(entry.entry_id)
+
+
+async def test_failed_statistics_rebuild_keeps_marker_for_later_retry(
+    hass: HomeAssistant,
+) -> None:
+    """A failed one-time repair must remain pending without reloading."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="configuration",
+        version=4,
+        data={
+            CONF_CONFIGURATION_TYPE: ConfigurationType.ELECTRICITY_ENERGY.value,
+            CONF_SOURCE_ENTITY_IDS: [],
+            CONF_ATTACH_ENTITY_IDS: [],
+            CONF_GROUPS: [],
+            CONF_REBUILD_STATISTICS: True,
+        },
+    )
+    entry.add_to_hass(hass)
+    failure_logged = asyncio.Event()
+
+    async def clear_statistics(_hass: HomeAssistant, _entry_id: str) -> None:
+        raise RuntimeError("Recorder unavailable")
+
+    def record_failure(*_args: object, **_kwargs: object) -> None:
+        failure_logged.set()
+
+    with (
+        patch(
+            "custom_components.mattsassistant.async_clear_derived_statistics",
+            side_effect=clear_statistics,
+        ),
+        patch(
+            "custom_components.mattsassistant._LOGGER.exception",
+            side_effect=record_failure,
+        ),
+        patch.object(hass.config_entries, "async_reload", AsyncMock()) as reload_mock,
+    ):
+        assert await async_setup_entry(hass, entry)
+        async with asyncio.timeout(1):
+            await failure_logged.wait()
+
+    assert entry.data[CONF_REBUILD_STATISTICS] is True
+    reload_mock.assert_not_awaited()
 
 
 async def test_setup_creates_ten_sensors_with_source_based_entity_ids(

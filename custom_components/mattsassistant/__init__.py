@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import logging
+from functools import partial
 from typing import TYPE_CHECKING
+
+from homeassistant.helpers.start import async_at_started
 
 from .const import (
     CONF_ATTACH_ENTITY_IDS,
@@ -22,6 +26,8 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
+_LOGGER = logging.getLogger(__name__)
+
 CONFIG_ENTRY_VERSION = 4
 LEGACY_CONFIGURATION_VERSION = 3
 
@@ -30,11 +36,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MattsAssistant from a config entry."""
     config = {**entry.data, **entry.options}
     if config.get(CONF_REBUILD_STATISTICS):
-        await async_clear_derived_statistics(hass, entry.entry_id)
-        data = dict(entry.data)
-        data.pop(CONF_REBUILD_STATISTICS, None)
-        hass.config_entries.async_update_entry(entry, data=data)
-        config.pop(CONF_REBUILD_STATISTICS, None)
+        entry.runtime_data = None
+        entry.async_on_unload(
+            async_at_started(
+                hass,
+                partial(_async_rebuild_statistics, entry=entry),
+            )
+        )
+        return True
     runtime_data = MattsAssistantRuntimeData(
         hass=hass,
         entry=entry,
@@ -53,6 +62,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a MattsAssistant config entry."""
+    if entry.runtime_data is None:
+        return True
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
     await entry.runtime_data.async_stop()
@@ -77,4 +88,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload the integration after its configuration changes."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def _async_rebuild_statistics(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Run a one-time statistics repair after Recorder starts processing tasks."""
+    try:
+        await async_clear_derived_statistics(hass, entry.entry_id)
+    except Exception:  # The retained marker allows a later retry.
+        _LOGGER.exception("Unable to rebuild statistics for %s", entry.entry_id)
+        return
+
+    data = dict(entry.data)
+    data.pop(CONF_REBUILD_STATISTICS, None)
+    hass.config_entries.async_update_entry(entry, data=data)
     await hass.config_entries.async_reload(entry.entry_id)
