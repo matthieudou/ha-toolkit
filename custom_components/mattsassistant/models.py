@@ -21,7 +21,55 @@ from homeassistant.util.unit_conversion import (
     VolumeFlowRateConverter,
 )
 
-from .const import CONF_GROUP_ENTITY_IDS, CONF_GROUP_ID, CONF_GROUP_NAME
+from .const import (
+    CONF_DEFAULT_SCENE_ENTITY_ID,
+    CONF_GROUP_ENTITY_IDS,
+    CONF_GROUP_ID,
+    CONF_GROUP_NAME,
+    CONF_MEMBER_ENTITY_IDS,
+    CONF_NAME,
+    CONF_SCENE_ENTITY_IDS,
+    CONF_TURN_ON_BEHAVIOR,
+)
+
+
+class TurnOnBehavior(StrEnum):
+    """Scene selected when Light Group+ is turned on without an effect."""
+
+    DEFAULT = "default"
+    LAST = "last"
+
+
+@dataclass(frozen=True, slots=True)
+class LightGroupPlusConfig:
+    """Configuration owned by one Light Group+ config entry."""
+
+    name: str
+    member_entity_ids: tuple[str, ...]
+    scene_entity_ids: tuple[str, ...]
+    default_scene_entity_id: str
+    turn_on_behavior: TurnOnBehavior
+
+    @classmethod
+    def from_dict(cls, value: dict[str, Any]) -> LightGroupPlusConfig:
+        """Parse the serializable config-entry representation."""
+        return cls(
+            name=str(value[CONF_NAME]),
+            member_entity_ids=tuple(value[CONF_MEMBER_ENTITY_IDS]),
+            scene_entity_ids=tuple(value[CONF_SCENE_ENTITY_IDS]),
+            default_scene_entity_id=str(value[CONF_DEFAULT_SCENE_ENTITY_ID]),
+            turn_on_behavior=TurnOnBehavior(value[CONF_TURN_ON_BEHAVIOR]),
+        )
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return the serializable config-entry representation."""
+        return {
+            CONF_NAME: self.name,
+            CONF_MEMBER_ENTITY_IDS: list(self.member_entity_ids),
+            CONF_SCENE_ENTITY_IDS: list(self.scene_entity_ids),
+            CONF_DEFAULT_SCENE_ENTITY_ID: self.default_scene_entity_id,
+            CONF_TURN_ON_BEHAVIOR: self.turn_on_behavior.value,
+        }
 
 
 class SourceMode(StrEnum):

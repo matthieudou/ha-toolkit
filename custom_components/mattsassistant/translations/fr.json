@@ -3,10 +3,23 @@
   "config": {
     "step": {
       "user": {
-        "title": "Nouvelle configuration de compteur",
-        "description": "Choisissez ce que mesurent les capteurs sources.",
+        "title": "Nouvelle configuration",
+        "description": "Choisissez le type d’entité à configurer.",
+        "data": {"configuration_type": "Type de configuration"}
+      },
+      "light_group_plus": {
+        "title": "Groupe de lumières+",
+        "description": "Créez un groupe de lumières dont les effets activent des scènes Home Assistant natives. Les noms d’effets viennent des noms visibles des scènes.",
         "data": {
-          "configuration_type": "Type de source"
+          "name": "Nom du groupe",
+          "member_entity_ids": "Lumières membres",
+          "scene_entity_ids": "Scènes",
+          "default_scene_entity_id": "Scène par défaut",
+          "turn_on_behavior": "Comportement à l’allumage"
+        },
+        "data_description": {
+          "scene_entity_ids": "L’ordre est conservé dans la liste des effets de la lumière.",
+          "default_scene_entity_id": "Cette scène doit aussi être sélectionnée dans Scènes."
         }
       },
       "configuration": {
@@ -81,11 +94,30 @@
       "duplicate_source": "Un capteur individuel ne peut être ajouté qu'une seule fois.",
       "invalid_price": "L'entité de prix sélectionnée doit actuellement contenir un nombre positif ou nul.",
       "duplicate_group_name": "Un groupe utilise déjà ce nom.",
+      "default_scene_not_selected": "La scène par défaut doit faire partie des scènes sélectionnées.",
+      "duplicate_entity": "Chaque lumière membre et chaque scène ne peut être sélectionnée qu’une fois.",
+      "missing_entity": "Une ou plusieurs lumières ou scènes sélectionnées sont indisponibles.",
+      "duplicate_scene_name": "Chaque scène sélectionnée doit avoir un nom visible unique.",
       "required": "Ce champ est obligatoire."
     }
   },
   "options": {
     "step": {
+      "light_group_plus": {
+        "title": "Groupe de lumières+",
+        "description": "Modifiez les membres, les scènes, la scène par défaut et le comportement à l’allumage.",
+        "data": {
+          "name": "Nom du groupe",
+          "member_entity_ids": "Lumières membres",
+          "scene_entity_ids": "Scènes",
+          "default_scene_entity_id": "Scène par défaut",
+          "turn_on_behavior": "Comportement à l’allumage"
+        },
+        "data_description": {
+          "scene_entity_ids": "L’ordre est conservé dans la liste des effets de la lumière.",
+          "default_scene_entity_id": "Cette scène doit aussi être sélectionnée dans Scènes."
+        }
+      },
       "configuration": {
         "title": "Configuration du compteur",
         "description": "Configurez les capteurs individuels, les groupes, leurs rattachements et un prix actuel facultatif par {price_unit}.",
@@ -158,6 +190,10 @@
       "duplicate_source": "Un capteur individuel ne peut être ajouté qu'une seule fois.",
       "invalid_price": "L'entité de prix sélectionnée doit actuellement contenir un nombre positif ou nul.",
       "duplicate_group_name": "Un groupe utilise déjà ce nom.",
+      "default_scene_not_selected": "La scène par défaut doit faire partie des scènes sélectionnées.",
+      "duplicate_entity": "Chaque lumière membre et chaque scène ne peut être sélectionnée qu’une fois.",
+      "missing_entity": "Une ou plusieurs lumières ou scènes sélectionnées sont indisponibles.",
+      "duplicate_scene_name": "Chaque scène sélectionnée doit avoir un nom visible unique.",
       "required": "Ce champ est obligatoire."
     }
   },
@@ -175,7 +211,14 @@
         "water_volume": "Eau · volume cumulé",
         "water_flow": "Eau · débit instantané",
         "gas_volume": "Gaz · volume cumulé",
-        "gas_flow": "Gaz · débit instantané"
+        "gas_flow": "Gaz · débit instantané",
+        "light_group_plus": "Groupe de lumières+"
+      }
+    },
+    "turn_on_behavior": {
+      "options": {
+        "default": "Toujours activer la scène par défaut",
+        "last": "Réactiver la dernière scène sélectionnée"
       }
     }
   },

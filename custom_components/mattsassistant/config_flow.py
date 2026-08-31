@@ -14,15 +14,27 @@ from homeassistant.helpers import selector
 from .const import (
     CONF_ATTACH_ENTITY_IDS,
     CONF_CONFIGURATION_TYPE,
+    CONF_DEFAULT_SCENE_ENTITY_ID,
     CONF_GROUP_ENTITY_IDS,
     CONF_GROUP_NAME,
     CONF_GROUPS,
+    CONF_MEMBER_ENTITY_IDS,
+    CONF_NAME,
     CONF_PRICE_ENTITY_ID,
+    CONF_SCENE_ENTITY_IDS,
     CONF_SOURCE_ENTITY_IDS,
+    CONF_TURN_ON_BEHAVIOR,
+    CONFIGURATION_TYPE_LIGHT_GROUP_PLUS,
     DOMAIN,
 )
 from .discovery import resolve_source
-from .models import MEASUREMENT_SPECS, ConfigurationType, MeterGroup
+from .models import (
+    MEASUREMENT_SPECS,
+    ConfigurationType,
+    LightGroupPlusConfig,
+    MeterGroup,
+    TurnOnBehavior,
+)
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -147,6 +159,11 @@ class MattsAssistantConfigFlow(
         """Select the kind of source values in this configuration."""
         if user_input is not None:
             await self.async_set_unique_id(uuid4().hex)
+            if (
+                user_input[CONF_CONFIGURATION_TYPE]
+                == CONFIGURATION_TYPE_LIGHT_GROUP_PLUS
+            ):
+                return await self.async_step_light_group_plus()
             self._initialize_configuration(
                 {
                     CONF_CONFIGURATION_TYPE: user_input[CONF_CONFIGURATION_TYPE],
@@ -162,12 +179,37 @@ class MattsAssistantConfigFlow(
                 {
                     vol.Required(CONF_CONFIGURATION_TYPE): selector.SelectSelector(
                         selector.SelectSelectorConfig(
-                            options=[item.value for item in ConfigurationType],
+                            options=[
+                                *[item.value for item in ConfigurationType],
+                                CONFIGURATION_TYPE_LIGHT_GROUP_PLUS,
+                            ],
                             translation_key="configuration_type",
                         )
                     )
                 }
             ),
+        )
+
+    async def async_step_light_group_plus(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Configure a Light Group+ entry."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            config, error = _validate_light_group_plus(self.hass, user_input)
+            if error is None:
+                return self.async_create_entry(
+                    title=config.name,
+                    data={
+                        CONF_CONFIGURATION_TYPE: CONFIGURATION_TYPE_LIGHT_GROUP_PLUS,
+                        **config.as_dict(),
+                    },
+                )
+            errors["base"] = error
+        return self.async_show_form(
+            step_id="light_group_plus",
+            data_schema=_light_group_plus_schema(user_input),
+            errors=errors,
         )
 
     def _create_configuration_entry(
@@ -197,13 +239,46 @@ class MattsAssistantOptionsFlow(_MeterFlowMixin, config_entries.OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options from the effective entry configuration."""
         self._config_entry = config_entry
-        self._initialize_configuration({**config_entry.data, **config_entry.options})
+        self._effective_config = {**config_entry.data, **config_entry.options}
+        if (
+            self._effective_config.get(CONF_CONFIGURATION_TYPE)
+            != CONFIGURATION_TYPE_LIGHT_GROUP_PLUS
+        ):
+            self._initialize_configuration(self._effective_config)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Show the single configuration page."""
+        if (
+            self._effective_config.get(CONF_CONFIGURATION_TYPE)
+            == CONFIGURATION_TYPE_LIGHT_GROUP_PLUS
+        ):
+            return await self.async_step_light_group_plus(user_input)
         return await self.async_step_configuration(user_input)
+
+    async def async_step_light_group_plus(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Edit a Light Group+ entry."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            config, error = _validate_light_group_plus(self.hass, user_input)
+            if error is None:
+                return self.async_create_entry(
+                    title="",
+                    data={
+                        CONF_CONFIGURATION_TYPE: CONFIGURATION_TYPE_LIGHT_GROUP_PLUS,
+                        **config.as_dict(),
+                    },
+                )
+            errors["base"] = error
+        defaults = user_input or self._effective_config
+        return self.async_show_form(
+            step_id="light_group_plus",
+            data_schema=_light_group_plus_schema(defaults),
+            errors=errors,
+        )
 
     def _create_configuration_entry(
         self, configuration: dict[str, Any]
@@ -296,6 +371,75 @@ def _configuration_schema(
     else:
         fields[vol.Optional(CONF_PRICE_ENTITY_ID)] = price_selector
     return vol.Schema(fields)
+
+
+def _light_group_plus_schema(defaults: dict[str, Any] | None) -> vol.Schema:
+    """Build the Light Group+ form."""
+    values = defaults or {}
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_NAME, default=values.get(CONF_NAME, "")
+            ): selector.TextSelector(),
+            vol.Required(
+                CONF_MEMBER_ENTITY_IDS,
+                default=values.get(CONF_MEMBER_ENTITY_IDS, []),
+            ): selector.EntitySelector(
+                selector.EntitySelectorConfig(
+                    domain="light", multiple=True, reorder=True
+                )
+            ),
+            vol.Required(
+                CONF_SCENE_ENTITY_IDS,
+                default=values.get(CONF_SCENE_ENTITY_IDS, []),
+            ): selector.EntitySelector(
+                selector.EntitySelectorConfig(
+                    domain="scene", multiple=True, reorder=True
+                )
+            ),
+            vol.Required(
+                CONF_DEFAULT_SCENE_ENTITY_ID,
+                default=values.get(CONF_DEFAULT_SCENE_ENTITY_ID, ""),
+            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="scene")),
+            vol.Required(
+                CONF_TURN_ON_BEHAVIOR,
+                default=values.get(CONF_TURN_ON_BEHAVIOR, TurnOnBehavior.DEFAULT.value),
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[item.value for item in TurnOnBehavior],
+                    translation_key="turn_on_behavior",
+                )
+            ),
+        }
+    )
+
+
+def _validate_light_group_plus(
+    hass: Any, user_input: dict[str, Any]
+) -> tuple[LightGroupPlusConfig, str | None]:
+    """Validate and normalize one Light Group+ submission."""
+    name = str(user_input.get(CONF_NAME, "")).strip()
+    members = tuple(user_input.get(CONF_MEMBER_ENTITY_IDS, []))
+    scenes = tuple(user_input.get(CONF_SCENE_ENTITY_IDS, []))
+    default_scene = str(user_input.get(CONF_DEFAULT_SCENE_ENTITY_ID, ""))
+    behavior = TurnOnBehavior(user_input[CONF_TURN_ON_BEHAVIOR])
+    config = LightGroupPlusConfig(name, members, scenes, default_scene, behavior)
+    if not name or not members or not scenes:
+        return config, "required"
+    if default_scene not in scenes:
+        return config, "default_scene_not_selected"
+    if len(members) != len(set(members)) or len(scenes) != len(set(scenes)):
+        return config, "duplicate_entity"
+    if any(hass.states.get(entity_id) is None for entity_id in (*members, *scenes)):
+        return config, "missing_entity"
+    scene_names = [
+        state.name.casefold()
+        for entity_id in scenes
+        if (state := hass.states.get(entity_id)) is not None
+    ]
+    if len(scene_names) != len(set(scene_names)):
+        return config, "duplicate_scene_name"
+    return config, None
 
 
 def _source_selector(

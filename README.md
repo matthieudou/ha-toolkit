@@ -3,7 +3,21 @@
 MattsAssistant is a Home Assistant custom integration that adds calendar,
 rolling and lifetime totals to utility meters and instantaneous rate sensors.
 It supports electricity, water and gas, named aggregates, historical
-reconstruction and time-varying unit prices.
+reconstruction and time-varying unit prices. It also provides Light Group+,
+a native light group whose effects activate configured Home Assistant scenes.
+
+## Light Group+
+
+Light Group+ creates a standard `light` entity from several member lights. Its
+effect list contains the visible names of selected native Home Assistant scenes.
+Calling `light.turn_on` with an effect activates the matching scene. Turning the
+group on without an effect activates either the configured default scene or the
+last selected scene.
+
+The group is on when at least one member is on. Turning it off targets every
+member. A brightness supplied with `light.turn_on` is applied uniformly after
+the selected scene. The integration remembers the last effect without a helper,
+while scenes remain editable through Home Assistant.
 
 ## Configuration types
 
@@ -79,9 +93,9 @@ attributes describe the current result.
 1. Add this repository as a custom HACS repository with category `Integration`.
 2. Install MattsAssistant and restart Home Assistant.
 3. Add MattsAssistant from **Settings > Devices & services**.
-4. Choose a source type, then add individual sensor rows and named groups. Each
-   individual row can keep its virtual meter separate from the source device.
-   You can also select an optional current price.
+4. Choose a meter source type or Light Group+. Meter configurations accept
+   individual sensor rows, named groups and an optional current price. Light
+   Group+ accepts member lights, scenes, a default scene and turn-on behavior.
 
 The minimum supported Home Assistant version is 2026.2.
 

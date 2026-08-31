@@ -3,9 +3,24 @@
   "config": {
     "step": {
       "user": {
-        "title": "New meter configuration",
-        "description": "Choose what the source sensors measure.",
-        "data": {"configuration_type": "Source type"}
+        "title": "New configuration",
+        "description": "Choose the entity type to configure.",
+        "data": {"configuration_type": "Configuration type"}
+      },
+      "light_group_plus": {
+        "title": "Light Group+",
+        "description": "Create a light group whose effects activate native Home Assistant scenes. Effect names come from the visible scene names.",
+        "data": {
+          "name": "Group name",
+          "member_entity_ids": "Member lights",
+          "scene_entity_ids": "Scenes",
+          "default_scene_entity_id": "Default scene",
+          "turn_on_behavior": "Turn-on behavior"
+        },
+        "data_description": {
+          "scene_entity_ids": "The order is preserved in the light effect list.",
+          "default_scene_entity_id": "This scene must also be selected in Scenes."
+        }
       },
       "configuration": {
         "title": "Meter configuration",
@@ -74,11 +89,30 @@
       "invalid_detached_sources": "Only selected individual sensors can be kept separate from their source device.",
       "invalid_price": "The selected price entity must currently contain a non-negative number.",
       "duplicate_group_name": "A group already uses this name.",
+      "default_scene_not_selected": "The default scene must be included in the selected scenes.",
+      "duplicate_entity": "Each member light and scene can only be selected once.",
+      "missing_entity": "One or more selected lights or scenes are unavailable.",
+      "duplicate_scene_name": "Every selected scene must have a unique visible name.",
       "required": "This field is required."
     }
   },
   "options": {
     "step": {
+      "light_group_plus": {
+        "title": "Light Group+",
+        "description": "Edit the members, scenes, default scene, and turn-on behavior.",
+        "data": {
+          "name": "Group name",
+          "member_entity_ids": "Member lights",
+          "scene_entity_ids": "Scenes",
+          "default_scene_entity_id": "Default scene",
+          "turn_on_behavior": "Turn-on behavior"
+        },
+        "data_description": {
+          "scene_entity_ids": "The order is preserved in the light effect list.",
+          "default_scene_entity_id": "This scene must also be selected in Scenes."
+        }
+      },
       "configuration": {
         "title": "Meter configuration",
         "description": "Configure individual sensors, groups, device links, and an optional current price per {price_unit}.",
@@ -146,6 +180,10 @@
       "invalid_detached_sources": "Only selected individual sensors can be kept separate from their source device.",
       "invalid_price": "The selected price entity must currently contain a non-negative number.",
       "duplicate_group_name": "A group already uses this name.",
+      "default_scene_not_selected": "The default scene must be included in the selected scenes.",
+      "duplicate_entity": "Each member light and scene can only be selected once.",
+      "missing_entity": "One or more selected lights or scenes are unavailable.",
+      "duplicate_scene_name": "Every selected scene must have a unique visible name.",
       "required": "This field is required."
     }
   },
@@ -157,7 +195,14 @@
         "water_volume": "Water · cumulative volume",
         "water_flow": "Water · instantaneous flow",
         "gas_volume": "Gas · cumulative volume",
-        "gas_flow": "Gas · instantaneous flow"
+        "gas_flow": "Gas · instantaneous flow",
+        "light_group_plus": "Light Group+"
+      }
+    },
+    "turn_on_behavior": {
+      "options": {
+        "default": "Always activate the default scene",
+        "last": "Reactivate the last selected scene"
       }
     }
   },

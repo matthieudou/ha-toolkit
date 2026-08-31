@@ -17,14 +17,20 @@ from custom_components.mattsassistant.config_flow import (
 from custom_components.mattsassistant.const import (
     CONF_ATTACH_ENTITY_IDS,
     CONF_CONFIGURATION_TYPE,
+    CONF_DEFAULT_SCENE_ENTITY_ID,
     CONF_GROUP_ENTITY_IDS,
     CONF_GROUP_NAME,
     CONF_GROUPS,
+    CONF_MEMBER_ENTITY_IDS,
+    CONF_NAME,
     CONF_PRICE_ENTITY_ID,
+    CONF_SCENE_ENTITY_IDS,
     CONF_SOURCE_ENTITY_IDS,
+    CONF_TURN_ON_BEHAVIOR,
+    CONFIGURATION_TYPE_LIGHT_GROUP_PLUS,
     DOMAIN,
 )
-from custom_components.mattsassistant.models import ConfigurationType
+from custom_components.mattsassistant.models import ConfigurationType, TurnOnBehavior
 
 
 def _add_energy_source(hass: HomeAssistant) -> str:
@@ -212,3 +218,73 @@ async def test_flow_requires_an_individual_sensor_or_group(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_targets"}
+
+
+async def test_light_group_plus_flow_stores_members_scenes_and_behavior(
+    recorder_mock: object, enable_custom_integrations: None, hass: HomeAssistant
+) -> None:
+    """Light Group+ uses a separate form and stores native entity IDs."""
+    del recorder_mock, enable_custom_integrations
+    hass.states.async_set("light.salon", "off")
+    hass.states.async_set("light.canape", "off")
+    hass.states.async_set(
+        "scene.salon_default", "scening", {"friendly_name": "Default"}
+    )
+    hass.states.async_set("scene.salon_tv", "scening", {"friendly_name": "TV"})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_CONFIGURATION_TYPE: CONFIGURATION_TYPE_LIGHT_GROUP_PLUS},
+    )
+
+    assert result["step_id"] == "light_group_plus"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Salon",
+            CONF_MEMBER_ENTITY_IDS: ["light.salon", "light.canape"],
+            CONF_SCENE_ENTITY_IDS: ["scene.salon_default", "scene.salon_tv"],
+            CONF_DEFAULT_SCENE_ENTITY_ID: "scene.salon_default",
+            CONF_TURN_ON_BEHAVIOR: TurnOnBehavior.LAST.value,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Salon"
+    assert result["data"][CONF_MEMBER_ENTITY_IDS] == [
+        "light.salon",
+        "light.canape",
+    ]
+    assert result["data"][CONF_TURN_ON_BEHAVIOR] == TurnOnBehavior.LAST.value
+
+
+async def test_light_group_plus_rejects_duplicate_scene_names(
+    recorder_mock: object, enable_custom_integrations: None, hass: HomeAssistant
+) -> None:
+    """Effect labels must be unambiguous in the native light control."""
+    del recorder_mock, enable_custom_integrations
+    hass.states.async_set("light.salon", "off")
+    hass.states.async_set("scene.one", "scening", {"friendly_name": "Cozy"})
+    hass.states.async_set("scene.two", "scening", {"friendly_name": "cozy"})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_CONFIGURATION_TYPE: CONFIGURATION_TYPE_LIGHT_GROUP_PLUS},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Salon",
+            CONF_MEMBER_ENTITY_IDS: ["light.salon"],
+            CONF_SCENE_ENTITY_IDS: ["scene.one", "scene.two"],
+            CONF_DEFAULT_SCENE_ENTITY_ID: "scene.one",
+            CONF_TURN_ON_BEHAVIOR: TurnOnBehavior.DEFAULT.value,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "duplicate_scene_name"}

@@ -255,6 +255,7 @@ def _remove_stale_registry_entries(
     for registry_entry in list(entity_registry.entities.values()):
         if (
             registry_entry.platform == DOMAIN
+            and registry_entry.domain == "sensor"
             and registry_entry.config_entry_id == entry.entry_id
             and registry_entry.unique_id not in expected_unique_ids
         ):

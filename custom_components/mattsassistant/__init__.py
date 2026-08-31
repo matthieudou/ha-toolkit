@@ -15,10 +15,12 @@ from .const import (
     CONF_PRICE_ENTITY_ID,
     CONF_REBUILD_STATISTICS,
     CONF_SOURCE_ENTITY_IDS,
-    PLATFORMS,
+    CONFIGURATION_TYPE_LIGHT_GROUP_PLUS,
+    LIGHT_GROUP_PLUS_PLATFORMS,
+    METER_PLATFORMS,
 )
 from .migration import migrate_legacy_configuration
-from .models import ConfigurationType, MeterGroup
+from .models import ConfigurationType, LightGroupPlusConfig, MeterGroup
 from .recorder import async_clear_derived_statistics
 from .runtime import MattsAssistantRuntimeData
 
@@ -35,6 +37,13 @@ LEGACY_CONFIGURATION_VERSION = 3
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MattsAssistant from a config entry."""
     config = {**entry.data, **entry.options}
+    if config.get(CONF_CONFIGURATION_TYPE) == CONFIGURATION_TYPE_LIGHT_GROUP_PLUS:
+        entry.runtime_data = LightGroupPlusConfig.from_dict(config)
+        await hass.config_entries.async_forward_entry_setups(
+            entry, LIGHT_GROUP_PLUS_PLATFORMS
+        )
+        entry.async_on_unload(entry.add_update_listener(_async_options_updated))
+        return True
     if config.get(CONF_REBUILD_STATISTICS):
         entry.runtime_data = None
         entry.async_on_unload(
@@ -55,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     entry.runtime_data = runtime_data
     await runtime_data.async_start()
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, METER_PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     return True
 
@@ -64,9 +73,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a MattsAssistant config entry."""
     if entry.runtime_data is None:
         return True
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    config = {**entry.data, **entry.options}
+    platforms = (
+        LIGHT_GROUP_PLUS_PLATFORMS
+        if config.get(CONF_CONFIGURATION_TYPE) == CONFIGURATION_TYPE_LIGHT_GROUP_PLUS
+        else METER_PLATFORMS
+    )
+    if not await hass.config_entries.async_unload_platforms(entry, platforms):
         return False
-    await entry.runtime_data.async_stop()
+    if isinstance(entry.runtime_data, MattsAssistantRuntimeData):
+        await entry.runtime_data.async_stop()
     return True
 
 
