@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/ha-toolkit-logo.png" alt="HA Toolkit logo" width="240">
+</p>
+
 # HA Toolkit
 
 HA Toolkit is a Home Assistant custom integration that adds calendar,
