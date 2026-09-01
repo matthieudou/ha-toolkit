@@ -14,8 +14,9 @@ from .const import (
     LIGHT_GROUP_PLUS_PLATFORMS,
     METER_PLATFORMS,
 )
-from .models import ConfigurationType, LightGroupPlusConfig, MeterGroup
-from .runtime import HAToolkitRuntimeData
+from .energy.models import ConfigurationType, MeterGroup
+from .energy.runtime import HAToolkitRuntimeData
+from .lights.models import LightGroupPlusConfig
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry

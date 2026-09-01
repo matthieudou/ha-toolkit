@@ -10,7 +10,8 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
-from .const import REFRESH_INTERVAL
+from custom_components.ha_toolkit.const import REFRESH_INTERVAL
+
 from .coordinator import MeterSourceRuntime, PriceRuntime
 from .discovery import resolve_meter_targets
 from .periods import CumulativeSeries

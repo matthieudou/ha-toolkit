@@ -5,9 +5,9 @@ from unittest.mock import patch
 
 from homeassistant.core import HomeAssistant, State
 
-from custom_components.ha_toolkit.coordinator import MeterSourceRuntime
-from custom_components.ha_toolkit.models import ConfigurationType, MeterSource
-from custom_components.ha_toolkit.periods import CumulativeSample
+from custom_components.ha_toolkit.energy.coordinator import MeterSourceRuntime
+from custom_components.ha_toolkit.energy.models import ConfigurationType, MeterSource
+from custom_components.ha_toolkit.energy.periods import CumulativeSample
 
 
 def test_live_updates_anchor_to_recorder_and_survive_source_reset(
@@ -92,18 +92,18 @@ def test_live_rate_keeps_observed_changes_during_the_open_hour(
     runtime = MeterSourceRuntime(hass, source)
     runtime._closed_samples = [CumulativeSample(start, 0.0)]
     with patch(
-        "custom_components.ha_toolkit.coordinator.dt_util.utcnow",
+        "custom_components.ha_toolkit.energy.coordinator.dt_util.utcnow",
         return_value=start,
     ):
         runtime._append_live_rate(0.0)
     with patch(
-        "custom_components.ha_toolkit.coordinator.dt_util.utcnow",
+        "custom_components.ha_toolkit.energy.coordinator.dt_util.utcnow",
         return_value=start + timedelta(minutes=45),
     ):
         runtime._append_live_rate(4.0)
     runtime._rebase_live_rate_samples()
     with patch(
-        "custom_components.ha_toolkit.coordinator.dt_util.utcnow",
+        "custom_components.ha_toolkit.energy.coordinator.dt_util.utcnow",
         return_value=start + timedelta(hours=1),
     ):
         runtime._append_live_rate(4.0)

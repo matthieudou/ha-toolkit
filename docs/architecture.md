@@ -1,4 +1,4 @@
-# Meter architecture
+# HA Toolkit architecture
 
 HA Toolkit has two independent config-entry families. Meter entries own
 Recorder-backed sensor calculations. Light Group+ entries own one native light
@@ -58,7 +58,7 @@ entity ID as a suggestion, resolves collisions and preserves user renames.
 
 ## Measurement normalization
 
-`models.py` maps each configuration type to a `MeasurementSpec`. The spec owns
+`energy/models.py` maps each configuration type to a `MeasurementSpec`. The spec owns
 the accepted source device class and state classes, Recorder unit class,
 canonical source unit, result unit and result device class.
 
@@ -68,40 +68,41 @@ in m³/h is integrated into m³. Missing hourly rate statistics break continuity
 the integration keeps only the newest continuous suffix rather than presenting
 an incomplete interval as complete.
 
-## Module boundaries
+## Module seams
 
-`config_flow.py` owns the multi-step UI. It selects a source type first, then
-individual sensors, per-source device links and any number of explicit groups.
-The options flow uses the same steps and keeps group IDs stable.
+The root `config_flow.py` adapter routes setup and options flows to a feature
+family. `energy/configuration.py` owns meter schemas and validation, while
+`lights/configuration.py` owns Light Group+ schemas and validation.
 
-`discovery.py` is the Home Assistant state and entity-registry boundary. It
+`energy/discovery.py` is the Home Assistant state and entity-registry seam. It
 validates configured entities and resolves them into immutable `MeterSource` and
 `MeterTarget` values. It performs no automatic device discovery.
 
-`coordinator.py` owns live state for one physical input. A single
+`energy/coordinator.py` owns live state for one physical input. A single
 `MeterSourceRuntime` extends closed Recorder history with the current cumulative
 state or integrates live rate changes. `PriceRuntime` owns the price timeline.
 
-`runtime.py` owns the config-entry lifecycle and shared derived data. It creates
+`energy/runtime.py` owns the config-entry lifecycle and shared derived data. It creates
 one runtime per physical source, caches each individual or aggregate target
 series once, and fans changes out to all derived sensor entities. This keeps the
 number of Recorder readers and aggregate calculations independent from the
 number of generated windows.
 
-`periods.py` contains pure calculations. `CumulativeSeries` calculates lifetime,
+`energy/periods.py` contains pure calculations. `CumulativeSeries` calculates lifetime,
 civil and rolling totals, combines source series, and derives a cost series from
 a price timeline.
 
-`sensor.py` maps targets and metrics to Home Assistant entities. Each individual
+The root `sensor.py` adapter delegates to `energy/sensor.py`, which maps targets
+and metrics to Home Assistant entities. Each individual
 source and each group gets a virtual device. An individual virtual device may
 link to its physical source device as its parent.
 
-`recorder.py` is the only module that queries or imports Recorder data. It reads
+`energy/recorder.py` is the only module that queries or imports Recorder data. It reads
 closed source hours and price changes, then resumes derived statistics after the
 last imported hour.
 
-`migration.py` is the compatibility boundary for unpublished config-entry
-formats and their entity unique IDs.
+The root `light.py` adapter delegates to `lights/group.py`, which owns the native
+light group and its scene-backed effects.
 
 ## Correctness choices
 

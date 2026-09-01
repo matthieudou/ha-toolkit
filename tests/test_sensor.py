@@ -6,24 +6,24 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 
-from custom_components.ha_toolkit.coordinator import (
+from custom_components.ha_toolkit.energy.coordinator import (
     MeterSourceRuntime,
     PriceRuntime,
 )
-from custom_components.ha_toolkit.models import (
+from custom_components.ha_toolkit.energy.models import (
     ConfigurationType,
     MeterSource,
     MeterTarget,
     TargetKind,
 )
-from custom_components.ha_toolkit.periods import (
+from custom_components.ha_toolkit.energy.periods import (
     CumulativeSample,
     CumulativeSeries,
     Metric,
     PriceSample,
 )
-from custom_components.ha_toolkit.runtime import MeterTargetRuntime
-from custom_components.ha_toolkit.sensor import (
+from custom_components.ha_toolkit.energy.runtime import MeterTargetRuntime
+from custom_components.ha_toolkit.energy.sensor import (
     CostMetricSensor,
     MeasurementMetricSensor,
 )

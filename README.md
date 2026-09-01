@@ -98,6 +98,23 @@ attributes describe the current result.
 
 The minimum supported Home Assistant version is 2026.2.
 
+### Replacing MattsAssistant
+
+HA Toolkit uses a new Home Assistant domain and does not migrate MattsAssistant
+config entries. Recreate those entries after installing HA Toolkit.
+
+If HACS already knew this repository under its previous name:
+
+1. Remove the MattsAssistant integration entries from **Settings > Devices & services**.
+2. Remove the old download and custom repository entry from HACS.
+3. Restart Home Assistant before adding the repository again. GitHub repository
+   renames preserve an internal identifier, so HACS may otherwise retain the old
+   `mattsassistant` installation directory.
+4. Add `https://github.com/matthieudou/ha-toolkit` as a custom repository with
+   category `Integration`.
+5. Confirm that HACS proposes `/config/custom_components/ha_toolkit`, install the
+   release, restart Home Assistant, and recreate the entries.
+
 ## Development
 
 The test suite requires Python 3.13.2.

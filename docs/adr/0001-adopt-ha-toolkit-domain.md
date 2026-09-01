@@ -1,3 +1,3 @@
-# Adopter le domaine HA Toolkit
+# Adopt the HA Toolkit domain
 
-L'intégration utilise désormais le nom HA Toolkit et le domaine `ha_toolkit`. Le projet reste réservé à un seul utilisateur pour le moment, nous préférons donc recréer les configurations existantes et supprimer le code de migration de MattsAssistant plutôt que conserver une compatibilité qui compliquerait chaque nouvelle famille de fonctions.
+The integration now uses the HA Toolkit name and the `ha_toolkit` domain. The project remains single-user for now, so existing configurations are recreated. The previous MattsAssistant migration code was removed instead of carrying compatibility into every new feature family.

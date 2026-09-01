@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 
-from .const import DOMAIN
+from custom_components.ha_toolkit.const import DOMAIN
+
 from .models import (
     MEASUREMENT_SPECS,
     ConfigurationType,

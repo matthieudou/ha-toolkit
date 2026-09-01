@@ -28,7 +28,7 @@ from custom_components.ha_toolkit.const import (
     CONFIGURATION_TYPE_LIGHT_GROUP_PLUS,
     DOMAIN,
 )
-from custom_components.ha_toolkit.models import ConfigurationType
+from custom_components.ha_toolkit.energy.models import ConfigurationType
 
 
 def _add_energy_source(hass: HomeAssistant) -> str:

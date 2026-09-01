@@ -24,7 +24,8 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from custom_components.ha_toolkit.const import DOMAIN
+
 from .models import MeterSource, SourceMode
 from .periods import CumulativeSample, CumulativeSeries, Metric, PriceSample
 

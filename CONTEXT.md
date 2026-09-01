@@ -1,21 +1,21 @@
 # HA Toolkit
 
-HA Toolkit regroupe des améliorations facultatives de fonctions existantes de Home Assistant dans une seule intégration personnalisée.
+HA Toolkit collects optional improvements to existing Home Assistant features in one custom integration.
 
-## Langage
+## Product language
 
-**HA Toolkit**:
-L'intégration ombrelle installée par l'utilisateur.
-_À éviter_: MattsAssistant, assistant
+**HA Toolkit**
+The umbrella integration installed by the user.
+Avoid: MattsAssistant, assistant
 
-**Energy**:
-Les fonctions qui calculent des consommations et des coûts civils, glissants ou cumulés à partir de l'historique Home Assistant.
-_À éviter_: Energy Enhancer
+**Energy**
+Features that calculate civil, rolling, and lifetime consumption or cost from Home Assistant history.
+Avoid: Energy Enhancer
 
-**Lights**:
-Les fonctions qui enrichissent les lumières, groupes et scènes natifs de Home Assistant.
-_À éviter_: Lights Enhancer
+**Lights**
+Features that extend native Home Assistant lights, groups, and scenes.
+Avoid: Lights Enhancer
 
-**Device Management**:
-Les métadonnées entretenues par l'utilisateur pour ses appareils physiques, notamment les codes d'inventaire et les notes.
-_À éviter_: Device Enhancer
+**Device Management**
+User-maintained metadata for physical devices, including inventory codes and notes.
+Avoid: Device Enhancer

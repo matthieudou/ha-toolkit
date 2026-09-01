@@ -1,4 +1,4 @@
-"""Pure cumulative-series calculations for HA Toolkit."""
+"""Pure cumulative-series calculations for HA Toolkit meters."""
 
 from __future__ import annotations
 

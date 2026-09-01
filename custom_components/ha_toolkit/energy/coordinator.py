@@ -14,7 +14,8 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.util import dt as dt_util
 
-from .const import REFRESH_INTERVAL
+from custom_components.ha_toolkit.const import REFRESH_INTERVAL
+
 from .models import MeterSource, SourceMode
 from .periods import (
     Consumption,

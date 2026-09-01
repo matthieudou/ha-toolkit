@@ -21,8 +21,8 @@ from custom_components.ha_toolkit.const import (
     CONF_SOURCE_ENTITY_IDS,
     DOMAIN,
 )
-from custom_components.ha_toolkit.models import ConfigurationType
-from custom_components.ha_toolkit.periods import (
+from custom_components.ha_toolkit.energy.models import ConfigurationType
+from custom_components.ha_toolkit.energy.periods import (
     CumulativeSample,
     CumulativeSeries,
     PriceSample,
@@ -88,11 +88,11 @@ async def test_setup_creates_ten_sensors_with_source_based_entity_ids(
     entry.add_to_hass(hass)
     with (
         patch(
-            "custom_components.ha_toolkit.runtime.MeterSourceRuntime.async_start",
+            "custom_components.ha_toolkit.energy.runtime.MeterSourceRuntime.async_start",
             _start_source,
         ),
         patch(
-            "custom_components.ha_toolkit.sensor.async_backfill_statistics",
+            "custom_components.ha_toolkit.energy.sensor.async_backfill_statistics",
             AsyncMock(return_value=0),
         ),
     ):
@@ -120,11 +120,11 @@ async def test_setup_creates_ten_sensors_with_source_based_entity_ids(
 
     with (
         patch(
-            "custom_components.ha_toolkit.runtime.MeterSourceRuntime.async_start",
+            "custom_components.ha_toolkit.energy.runtime.MeterSourceRuntime.async_start",
             _start_source,
         ),
         patch(
-            "custom_components.ha_toolkit.sensor.async_backfill_statistics",
+            "custom_components.ha_toolkit.energy.sensor.async_backfill_statistics",
             AsyncMock(return_value=0),
         ),
     ):
@@ -144,7 +144,7 @@ async def test_setup_creates_ten_sensors_with_source_based_entity_ids(
     assert virtual_device.via_device_id is None
 
     with patch(
-        "custom_components.ha_toolkit.sensor.async_backfill_statistics",
+        "custom_components.ha_toolkit.energy.sensor.async_backfill_statistics",
         AsyncMock(return_value=0),
     ):
         assert await hass.config_entries.async_unload(entry.entry_id)
@@ -195,15 +195,15 @@ async def test_group_with_price_creates_virtual_device_and_cost_sensors(
 
     with (
         patch(
-            "custom_components.ha_toolkit.runtime.MeterSourceRuntime.async_start",
+            "custom_components.ha_toolkit.energy.runtime.MeterSourceRuntime.async_start",
             _start_source,
         ),
         patch(
-            "custom_components.ha_toolkit.runtime.PriceRuntime.async_start",
+            "custom_components.ha_toolkit.energy.runtime.PriceRuntime.async_start",
             start_price,
         ),
         patch(
-            "custom_components.ha_toolkit.sensor.async_backfill_statistics",
+            "custom_components.ha_toolkit.energy.sensor.async_backfill_statistics",
             AsyncMock(return_value=0),
         ),
     ):

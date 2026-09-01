@@ -18,8 +18,8 @@ from custom_components.ha_toolkit.const import (
     CONFIGURATION_TYPE_LIGHT_GROUP_PLUS,
     DOMAIN,
 )
-from custom_components.ha_toolkit.light import LightGroupPlus
-from custom_components.ha_toolkit.models import LightGroupPlusConfig
+from custom_components.ha_toolkit.lights.group import LightGroupPlus
+from custom_components.ha_toolkit.lights.models import LightGroupPlusConfig
 
 
 def _entity(hass: HomeAssistant) -> LightGroupPlus:
