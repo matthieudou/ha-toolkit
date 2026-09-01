@@ -7,11 +7,11 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.mattsassistant.discovery import (
+from custom_components.ha_toolkit.discovery import (
     is_supported_sensor,
     resolve_meter_targets,
 )
-from custom_components.mattsassistant.models import (
+from custom_components.ha_toolkit.models import (
     ConfigurationType,
     MeterGroup,
     TargetKind,

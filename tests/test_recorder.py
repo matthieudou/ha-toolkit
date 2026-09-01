@@ -21,15 +21,15 @@ from pytest_homeassistant_custom_component.components.recorder.common import (
     async_recorder_block_till_done,
 )
 
-from custom_components.mattsassistant.const import DOMAIN
-from custom_components.mattsassistant.models import ConfigurationType, MeterSource
-from custom_components.mattsassistant.periods import (
+from custom_components.ha_toolkit.const import DOMAIN
+from custom_components.ha_toolkit.models import ConfigurationType, MeterSource
+from custom_components.ha_toolkit.periods import (
     CumulativeSample,
     CumulativeSeries,
     HistoricalValue,
     Metric,
 )
-from custom_components.mattsassistant.recorder import (
+from custom_components.ha_toolkit.recorder import (
     LastStatistic,
     async_backfill_statistics,
     async_clear_derived_statistics,
@@ -40,7 +40,7 @@ from custom_components.mattsassistant.recorder import (
 async def test_clear_derived_statistics_only_targets_the_config_entry(
     recorder_mock: object, hass: HomeAssistant
 ) -> None:
-    """The one-time repair removes statistics owned by one MattsAssistant entry."""
+    """The one-time repair removes statistics owned by one HA Toolkit entry."""
     del recorder_mock
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -88,19 +88,17 @@ async def test_backfill_resumes_after_latest_closed_hour(hass: HomeAssistant) ->
     )
     with (
         patch(
-            "custom_components.mattsassistant.recorder.async_get_last_statistic",
+            "custom_components.ha_toolkit.recorder.async_get_last_statistic",
             AsyncMock(
                 return_value=LastStatistic(
                     current_hour - timedelta(hours=2), 24.0, 42.0
                 )
             ),
         ),
-        patch(
-            "custom_components.mattsassistant.recorder.dt_util.utcnow", return_value=now
-        ),
+        patch("custom_components.ha_toolkit.recorder.dt_util.utcnow", return_value=now),
         patch.dict(StatisticMetaData.__annotations__, {"unit_class": str}),
         patch(
-            "custom_components.mattsassistant.recorder.async_import_statistics"
+            "custom_components.ha_toolkit.recorder.async_import_statistics"
         ) as import_statistics,
     ):
         count = await async_backfill_statistics(
@@ -130,15 +128,13 @@ async def test_cost_backfill_uses_monetary_metadata(hass: HomeAssistant) -> None
     )
     with (
         patch(
-            "custom_components.mattsassistant.recorder.async_get_last_statistic",
+            "custom_components.ha_toolkit.recorder.async_get_last_statistic",
             AsyncMock(return_value=None),
         ),
-        patch(
-            "custom_components.mattsassistant.recorder.dt_util.utcnow", return_value=now
-        ),
+        patch("custom_components.ha_toolkit.recorder.dt_util.utcnow", return_value=now),
         patch.dict(StatisticMetaData.__annotations__, {"unit_class": str}),
         patch(
-            "custom_components.mattsassistant.recorder.async_import_statistics"
+            "custom_components.ha_toolkit.recorder.async_import_statistics"
         ) as import_statistics,
     ):
         await async_backfill_statistics(
@@ -166,14 +162,12 @@ async def test_rolling_backfill_does_not_add_absolute_window_values(
     ]
     with (
         patch(
-            "custom_components.mattsassistant.recorder.async_get_last_statistic",
+            "custom_components.ha_toolkit.recorder.async_get_last_statistic",
             AsyncMock(return_value=None),
         ),
+        patch("custom_components.ha_toolkit.recorder.dt_util.utcnow", return_value=now),
         patch(
-            "custom_components.mattsassistant.recorder.dt_util.utcnow", return_value=now
-        ),
-        patch(
-            "custom_components.mattsassistant.recorder.async_import_statistics"
+            "custom_components.ha_toolkit.recorder.async_import_statistics"
         ) as import_statistics,
     ):
         await async_backfill_statistics(

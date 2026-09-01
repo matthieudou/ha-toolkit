@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from custom_components.mattsassistant.periods import (
+from custom_components.ha_toolkit.periods import (
     CumulativeSample,
     CumulativeSeries,
     Metric,

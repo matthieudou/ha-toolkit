@@ -1,7 +1,7 @@
 [project]
-name = "mattsassistant"
-version = "0.1.2"
-description = "Calendar and rolling utility-meter metrics for Home Assistant"
+name = "ha-toolkit"
+version = "0.2.0"
+description = "Personal toolkit for Home Assistant energy, lighting, and devices"
 license = "MIT"
 requires-python = ">=3.13.2,<3.14"
 

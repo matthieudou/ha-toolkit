@@ -1,4 +1,4 @@
-"""Tests for the MattsAssistant config flow."""
+"""Tests for the HA Toolkit config flow."""
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -9,15 +9,14 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.mattsassistant.config_flow import (
+from custom_components.ha_toolkit.config_flow import (
     CONF_ENTITY_ID,
     CONF_INDIVIDUAL_SOURCES,
     CONF_KEEP_SEPARATE,
 )
-from custom_components.mattsassistant.const import (
+from custom_components.ha_toolkit.const import (
     CONF_ATTACH_ENTITY_IDS,
     CONF_CONFIGURATION_TYPE,
-    CONF_DEFAULT_SCENE_ENTITY_ID,
     CONF_GROUP_ENTITY_IDS,
     CONF_GROUP_NAME,
     CONF_GROUPS,
@@ -26,11 +25,10 @@ from custom_components.mattsassistant.const import (
     CONF_PRICE_ENTITY_ID,
     CONF_SCENE_ENTITY_IDS,
     CONF_SOURCE_ENTITY_IDS,
-    CONF_TURN_ON_BEHAVIOR,
     CONFIGURATION_TYPE_LIGHT_GROUP_PLUS,
     DOMAIN,
 )
-from custom_components.mattsassistant.models import ConfigurationType, TurnOnBehavior
+from custom_components.ha_toolkit.models import ConfigurationType
 
 
 def _add_energy_source(hass: HomeAssistant) -> str:
@@ -220,7 +218,7 @@ async def test_flow_requires_an_individual_sensor_or_group(
     assert result["errors"] == {"base": "no_targets"}
 
 
-async def test_light_group_plus_flow_stores_members_scenes_and_behavior(
+async def test_light_group_plus_flow_stores_members_and_ordered_scenes(
     recorder_mock: object, enable_custom_integrations: None, hass: HomeAssistant
 ) -> None:
     """Light Group+ uses a separate form and stores native entity IDs."""
@@ -246,8 +244,6 @@ async def test_light_group_plus_flow_stores_members_scenes_and_behavior(
             CONF_NAME: "Salon",
             CONF_MEMBER_ENTITY_IDS: ["light.salon", "light.canape"],
             CONF_SCENE_ENTITY_IDS: ["scene.salon_default", "scene.salon_tv"],
-            CONF_DEFAULT_SCENE_ENTITY_ID: "scene.salon_default",
-            CONF_TURN_ON_BEHAVIOR: TurnOnBehavior.LAST.value,
         },
     )
 
@@ -257,7 +253,10 @@ async def test_light_group_plus_flow_stores_members_scenes_and_behavior(
         "light.salon",
         "light.canape",
     ]
-    assert result["data"][CONF_TURN_ON_BEHAVIOR] == TurnOnBehavior.LAST.value
+    assert result["data"][CONF_SCENE_ENTITY_IDS] == [
+        "scene.salon_default",
+        "scene.salon_tv",
+    ]
 
 
 async def test_light_group_plus_rejects_duplicate_scene_names(
@@ -281,8 +280,6 @@ async def test_light_group_plus_rejects_duplicate_scene_names(
             CONF_NAME: "Salon",
             CONF_MEMBER_ENTITY_IDS: ["light.salon"],
             CONF_SCENE_ENTITY_IDS: ["scene.one", "scene.two"],
-            CONF_DEFAULT_SCENE_ENTITY_ID: "scene.one",
-            CONF_TURN_ON_BEHAVIOR: TurnOnBehavior.DEFAULT.value,
         },
     )
 

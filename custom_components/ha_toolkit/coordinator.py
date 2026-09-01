@@ -1,4 +1,4 @@
-"""Per-source runtime state for MattsAssistant meter sensors."""
+"""Per-source runtime state for HA Toolkit meter sensors."""
 
 from __future__ import annotations
 

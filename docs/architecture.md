@@ -1,33 +1,28 @@
 # Meter architecture
 
-MattsAssistant has two independent config-entry families. Meter entries own
+HA Toolkit has two independent config-entry families. Meter entries own
 Recorder-backed sensor calculations. Light Group+ entries own one native light
 entity and do not create or edit scenes.
 
 ## Light Group+ architecture
 
-A Light Group+ config entry stores a name, ordered member lights, ordered native
-scenes, one default scene and a `default` or `last` turn-on behavior. The light
-platform maps each scene's visible Home Assistant name to an effect. Duplicate
+A Light Group+ config entry stores a name, ordered member lights, and ordered
+native scenes. The light platform maps each scene's visible Home Assistant name
+to an effect. Duplicate
 visible scene names are rejected because `light.turn_on(effect=...)` needs an
 unambiguous mapping.
 
-`LightGroupPlus` is a standalone `LightEntity`. It deliberately does not inherit
-Home Assistant's internal `LightGroup` class, whose state updates replace the
-effect list with effects advertised by member bulbs. The entity subscribes to
-member state changes, reports on when any member is on, averages the brightness
-of members that are on, and forwards off commands to every member.
+`LightGroupPlus` extends Home Assistant's internal `LightGroup` class and restores
+its scene-backed effect list after every native group-state update. Home Assistant
+therefore owns member tracking, state and attribute aggregation, supported modes,
+and command forwarding. Tests protect this intentional internal API dependency.
 
 Turning on always activates a configured scene. An explicit effect selects its
-scene. A plain turn-on selects either the default scene or the last selected
-scene, with the default as fallback. A supplied brightness is then forwarded
-uniformly to all members. This V1 behavior does not scale individual scene
-brightness values.
-
-The last effect uses Home Assistant's restore-state data. It survives integration
-reloads and Home Assistant restarts without an `input_select`, helper, or config
-entry write. Scenes remain native Home Assistant scenes and retain their normal
-editing and storage lifecycle.
+scene, while a plain turn-on selects the first configured scene. Other supported
+light attributes are then forwarded through the native group implementation.
+The current effect is runtime-only and is not restored after a reload or restart.
+Scenes remain native Home Assistant scenes and retain their normal editing and
+storage lifecycle.
 
 ## Configuration model
 

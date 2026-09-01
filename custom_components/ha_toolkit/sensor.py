@@ -1,4 +1,4 @@
-"""Calendar, rolling and cost sensors for MattsAssistant."""
+"""Calendar, rolling and cost sensors for HA Toolkit."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from .periods import CumulativeSeries
-    from .runtime import MattsAssistantRuntimeData, MeterTargetRuntime
+    from .runtime import HAToolkitRuntimeData, MeterTargetRuntime
 
 
 class ValueKind(StrEnum):
@@ -44,8 +44,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up all configured individual and group sensors."""
-    runtime_data: MattsAssistantRuntimeData = entry.runtime_data
-    entities: list[MattsAssistantSensor] = []
+    runtime_data: HAToolkitRuntimeData = entry.runtime_data
+    entities: list[HAToolkitSensor] = []
     for target in runtime_data.targets:
         entities.extend(MeasurementMetricSensor(target, metric) for metric in METRICS)
         if runtime_data.price is not None:
@@ -54,7 +54,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MattsAssistantSensor(SensorEntity):
+class HAToolkitSensor(SensorEntity):
     """Base entity for one target and cumulative metric."""
 
     _attr_has_entity_name = True
@@ -211,7 +211,7 @@ class MattsAssistantSensor(SensorEntity):
             )
 
 
-class MeasurementMetricSensor(MattsAssistantSensor):
+class MeasurementMetricSensor(HAToolkitSensor):
     """Consumption by a target in one metric window."""
 
     _attr_state_class = SensorStateClass.TOTAL
@@ -225,7 +225,7 @@ class MeasurementMetricSensor(MattsAssistantSensor):
         super().__init__(runtime, metric, ValueKind.MEASUREMENT)
 
 
-class CostMetricSensor(MattsAssistantSensor):
+class CostMetricSensor(HAToolkitSensor):
     """Cost accumulated by a target in one metric window."""
 
     _attr_device_class = SensorDeviceClass.MONETARY
@@ -246,7 +246,7 @@ def _window_type(metric: Metric) -> str:
 
 @callback
 def _remove_stale_registry_entries(
-    entry: ConfigEntry, entities: list[MattsAssistantSensor]
+    entry: ConfigEntry, entities: list[HAToolkitSensor]
 ) -> None:
     """Remove generated entities and virtual devices no longer in the config."""
     hass = entry.runtime_data.hass

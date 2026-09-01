@@ -1,4 +1,4 @@
-"""Shared runtime for one MattsAssistant config entry."""
+"""Shared runtime for one HA Toolkit config entry."""
 
 from __future__ import annotations
 
@@ -108,7 +108,7 @@ class MeterTargetRuntime:
 
 
 @dataclass(slots=True)
-class MattsAssistantRuntimeData:
+class HAToolkitRuntimeData:
     """Own all live state and subscriptions for one config entry."""
 
     hass: HomeAssistant

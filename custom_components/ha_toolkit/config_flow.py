@@ -1,4 +1,4 @@
-"""Config flow for MattsAssistant."""
+"""Config flow for HA Toolkit."""
 
 from __future__ import annotations
 
@@ -14,7 +14,6 @@ from homeassistant.helpers import selector
 from .const import (
     CONF_ATTACH_ENTITY_IDS,
     CONF_CONFIGURATION_TYPE,
-    CONF_DEFAULT_SCENE_ENTITY_ID,
     CONF_GROUP_ENTITY_IDS,
     CONF_GROUP_NAME,
     CONF_GROUPS,
@@ -23,7 +22,6 @@ from .const import (
     CONF_PRICE_ENTITY_ID,
     CONF_SCENE_ENTITY_IDS,
     CONF_SOURCE_ENTITY_IDS,
-    CONF_TURN_ON_BEHAVIOR,
     CONFIGURATION_TYPE_LIGHT_GROUP_PLUS,
     DOMAIN,
 )
@@ -33,7 +31,6 @@ from .models import (
     ConfigurationType,
     LightGroupPlusConfig,
     MeterGroup,
-    TurnOnBehavior,
 )
 
 if TYPE_CHECKING:
@@ -146,12 +143,10 @@ class _MeterFlowMixin:
         raise NotImplementedError
 
 
-class MattsAssistantConfigFlow(
-    _MeterFlowMixin, config_entries.ConfigFlow, domain=DOMAIN
-):
+class HAToolkitConfigFlow(_MeterFlowMixin, config_entries.ConfigFlow, domain=DOMAIN):
     """Configure one type of meter and its aggregates."""
 
-    VERSION = 4
+    VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -217,23 +212,23 @@ class MattsAssistantConfigFlow(
     ) -> config_entries.ConfigFlowResult:
         if len(self._source_entity_ids) == 1 and not self._groups:
             state = self.hass.states.get(self._source_entity_ids[0])
-            title = state.name if state else "MattsAssistant"
+            title = state.name if state else "HA Toolkit"
         elif not self._source_entity_ids and len(self._groups) == 1:
             title = self._groups[0].name
         else:
-            title = "MattsAssistant"
+            title = "HA Toolkit"
         return self.async_create_entry(title=title, data=configuration)
 
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> MattsAssistantOptionsFlow:
+    ) -> HAToolkitOptionsFlow:
         """Return the options flow."""
-        return MattsAssistantOptionsFlow(config_entry)
+        return HAToolkitOptionsFlow(config_entry)
 
 
-class MattsAssistantOptionsFlow(_MeterFlowMixin, config_entries.OptionsFlow):
+class HAToolkitOptionsFlow(_MeterFlowMixin, config_entries.OptionsFlow):
     """Change all settings from one options page."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
@@ -397,19 +392,6 @@ def _light_group_plus_schema(defaults: dict[str, Any] | None) -> vol.Schema:
                     domain="scene", multiple=True, reorder=True
                 )
             ),
-            vol.Required(
-                CONF_DEFAULT_SCENE_ENTITY_ID,
-                default=values.get(CONF_DEFAULT_SCENE_ENTITY_ID, ""),
-            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="scene")),
-            vol.Required(
-                CONF_TURN_ON_BEHAVIOR,
-                default=values.get(CONF_TURN_ON_BEHAVIOR, TurnOnBehavior.DEFAULT.value),
-            ): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[item.value for item in TurnOnBehavior],
-                    translation_key="turn_on_behavior",
-                )
-            ),
         }
     )
 
@@ -421,13 +403,9 @@ def _validate_light_group_plus(
     name = str(user_input.get(CONF_NAME, "")).strip()
     members = tuple(user_input.get(CONF_MEMBER_ENTITY_IDS, []))
     scenes = tuple(user_input.get(CONF_SCENE_ENTITY_IDS, []))
-    default_scene = str(user_input.get(CONF_DEFAULT_SCENE_ENTITY_ID, ""))
-    behavior = TurnOnBehavior(user_input[CONF_TURN_ON_BEHAVIOR])
-    config = LightGroupPlusConfig(name, members, scenes, default_scene, behavior)
+    config = LightGroupPlusConfig(name, members, scenes)
     if not name or not members or not scenes:
         return config, "required"
-    if default_scene not in scenes:
-        return config, "default_scene_not_selected"
     if len(members) != len(set(members)) or len(scenes) != len(set(scenes)):
         return config, "duplicate_entity"
     if any(hass.states.get(entity_id) is None for entity_id in (*members, *scenes)):

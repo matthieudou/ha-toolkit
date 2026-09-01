@@ -1,4 +1,4 @@
-"""Pure cumulative-series calculations for MattsAssistant."""
+"""Pure cumulative-series calculations for HA Toolkit."""
 
 from __future__ import annotations
 

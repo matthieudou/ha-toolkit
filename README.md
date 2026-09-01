@@ -1,6 +1,6 @@
-# MattsAssistant
+# HA Toolkit
 
-MattsAssistant is a Home Assistant custom integration that adds calendar,
+HA Toolkit is a Home Assistant custom integration that adds calendar,
 rolling and lifetime totals to utility meters and instantaneous rate sensors.
 It supports electricity, water and gas, named aggregates, historical
 reconstruction and time-varying unit prices. It also provides Light Group+,
@@ -11,13 +11,12 @@ a native light group whose effects activate configured Home Assistant scenes.
 Light Group+ creates a standard `light` entity from several member lights. Its
 effect list contains the visible names of selected native Home Assistant scenes.
 Calling `light.turn_on` with an effect activates the matching scene. Turning the
-group on without an effect activates either the configured default scene or the
-last selected scene.
+group on without an effect activates the first configured scene.
 
-The group is on when at least one member is on. Turning it off targets every
-member. A brightness supplied with `light.turn_on` is applied uniformly after
-the selected scene. The integration remembers the last effect without a helper,
-while scenes remain editable through Home Assistant.
+The group uses Home Assistant's native light-group aggregation for its state,
+brightness, colors, supported modes, and commands. Scenes remain editable
+through Home Assistant. The selected effect is kept only in memory and is not
+restored after an integration reload or Home Assistant restart.
 
 ## Configuration types
 
@@ -34,10 +33,10 @@ Sources are selected as sensor entities, not devices. This supports devices with
 several channels, such as a two-valve water controller or a multi-socket power
 strip. A source device does not need a `switch` entity.
 
-An individual source receives a virtual MattsAssistant meter containing its
+An individual source receives a virtual HA Toolkit meter containing its
 derived sensors. By default, the meter is linked below the physical source
 device, but it can remain standalone. Named groups create virtual
-MattsAssistant devices containing the sum of their selected members. A source
+HA Toolkit devices containing the sum of their selected members. A source
 may belong to any number of groups and does not need to be selected as an
 individual source.
 
@@ -61,10 +60,10 @@ with the day clamped when needed. It is not treated as 90 days.
 ## Pricing
 
 Each config entry accepts an optional numeric entity containing the current
-price per kWh or m³. When configured, MattsAssistant creates ten matching
+price per kWh or m³. When configured, HA Toolkit creates ten matching
 monetary sensors in the Home Assistant currency.
 
-The price may change over time. MattsAssistant applies the active price to later
+The price may change over time. HA Toolkit applies the active price to later
 increments, so tariff changes do not revalue older consumption. Tariff
 schedules, supplier APIs and automations remain outside the integration.
 
@@ -78,7 +77,7 @@ saving them.
 
 ## History
 
-Recorder is the source of truth. MattsAssistant reads closed hourly statistics,
+Recorder is the source of truth. HA Toolkit reads closed hourly statistics,
 normalizes cumulative meter resets and integrates hourly means for power and
 flow sources. It reconstructs only periods supported by continuous history and
 never imports the open Recorder hour.
@@ -91,11 +90,11 @@ attributes describe the current result.
 ## Installation with HACS
 
 1. Add this repository as a custom HACS repository with category `Integration`.
-2. Install MattsAssistant and restart Home Assistant.
-3. Add MattsAssistant from **Settings > Devices & services**.
+2. Install HA Toolkit and restart Home Assistant.
+3. Add HA Toolkit from **Settings > Devices & services**.
 4. Choose a meter source type or Light Group+. Meter configurations accept
    individual sensor rows, named groups and an optional current price. Light
-   Group+ accepts member lights, scenes, a default scene and turn-on behavior.
+   Group+ accepts member lights and an ordered scene list.
 
 The minimum supported Home Assistant version is 2026.2.
 

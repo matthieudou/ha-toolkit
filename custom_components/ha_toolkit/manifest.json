@@ -1,0 +1,13 @@
+{
+  "domain": "ha_toolkit",
+  "name": "HA Toolkit",
+  "codeowners": ["@matthieudou"],
+  "config_flow": true,
+  "dependencies": ["recorder"],
+  "documentation": "https://github.com/matthieudou/ha-toolkit",
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/matthieudou/ha-toolkit/issues",
+  "requirements": [],
+  "version": "0.2.0"
+}

@@ -10,21 +10,19 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.mattsassistant.const import (
+from custom_components.ha_toolkit.const import (
     CONF_CONFIGURATION_TYPE,
-    CONF_DEFAULT_SCENE_ENTITY_ID,
     CONF_MEMBER_ENTITY_IDS,
     CONF_NAME,
     CONF_SCENE_ENTITY_IDS,
-    CONF_TURN_ON_BEHAVIOR,
     CONFIGURATION_TYPE_LIGHT_GROUP_PLUS,
     DOMAIN,
 )
-from custom_components.mattsassistant.light import LightGroupPlus
-from custom_components.mattsassistant.models import LightGroupPlusConfig, TurnOnBehavior
+from custom_components.ha_toolkit.light import LightGroupPlus
+from custom_components.ha_toolkit.models import LightGroupPlusConfig
 
 
-def _entity(hass: HomeAssistant, behavior: TurnOnBehavior) -> LightGroupPlus:
+def _entity(hass: HomeAssistant) -> LightGroupPlus:
     hass.states.async_set(
         "light.ceiling",
         "off",
@@ -43,20 +41,18 @@ def _entity(hass: HomeAssistant, behavior: TurnOnBehavior) -> LightGroupPlus:
             "Living room",
             ("light.ceiling", "light.lamp"),
             ("scene.living_room_default", "scene.living_room_cozy"),
-            "scene.living_room_default",
-            behavior,
         ),
     )
     entity.hass = hass
     entity.entity_id = "light.living_room"
     entity._resolve_effects()
-    entity._update_group_state()
+    entity.async_update_group_state()
     return entity
 
 
 def test_effects_are_configured_scene_names_in_order(hass: HomeAssistant) -> None:
     """Native effects expose only configured scene names."""
-    entity = _entity(hass, TurnOnBehavior.DEFAULT)
+    entity = _entity(hass)
 
     assert entity.effect_list == ["Default", "Cozy"]
     assert entity.supported_color_modes == {ColorMode.BRIGHTNESS}
@@ -66,21 +62,21 @@ def test_group_is_on_when_any_member_is_on_and_averages_brightness(
     hass: HomeAssistant,
 ) -> None:
     """Member state follows classic any-member light-group semantics."""
-    entity = _entity(hass, TurnOnBehavior.DEFAULT)
+    entity = _entity(hass)
     hass.states.async_set("light.ceiling", "on", {ATTR_BRIGHTNESS: 100})
     hass.states.async_set("light.lamp", "on", {ATTR_BRIGHTNESS: 200})
 
-    entity._update_group_state()
+    entity.async_update_group_state()
 
     assert entity.is_on is True
     assert entity.brightness == 150
 
 
-async def test_explicit_effect_activates_scene_and_becomes_last(
+async def test_explicit_effect_activates_scene_for_the_current_runtime(
     hass: HomeAssistant,
 ) -> None:
-    """An effect delegates to scene.turn_on and is retained locally."""
-    entity = _entity(hass, TurnOnBehavior.LAST)
+    """An effect delegates to scene.turn_on and is retained only in memory."""
+    entity = _entity(hass)
     entity.async_write_ha_state = lambda: None
     calls: list[ServiceCall] = []
 
@@ -96,14 +92,13 @@ async def test_explicit_effect_activates_scene_and_becomes_last(
     assert calls[0].service == SERVICE_TURN_ON
     assert calls[0].data == {ATTR_ENTITY_ID: "scene.living_room_cozy"}
     assert entity.effect == "Cozy"
-    assert entity.extra_restore_state_data.as_dict() == {"last_effect": "Cozy"}
 
 
-async def test_plain_turn_on_uses_last_with_default_fallback_and_brightness(
+async def test_plain_turn_on_uses_first_scene_and_forwards_brightness(
     hass: HomeAssistant,
 ) -> None:
-    """Last mode falls back to default and forwards a simple brightness value."""
-    entity = _entity(hass, TurnOnBehavior.LAST)
+    """A plain turn-on uses the first scene before forwarding brightness."""
+    entity = _entity(hass)
     entity.async_write_ha_state = lambda: None
     calls: list[ServiceCall] = []
 
@@ -126,7 +121,7 @@ async def test_plain_turn_on_uses_last_with_default_fallback_and_brightness(
 
 async def test_turn_off_targets_every_member(hass: HomeAssistant) -> None:
     """Turning off the group delegates to all configured lights."""
-    entity = _entity(hass, TurnOnBehavior.DEFAULT)
+    entity = _entity(hass)
     calls: list[ServiceCall] = []
 
     async def record_call(call: ServiceCall) -> None:
@@ -167,7 +162,7 @@ async def test_config_entry_exposes_native_effects_and_toggle(
         domain=DOMAIN,
         title="Living room",
         unique_id="light-group-plus",
-        version=4,
+        version=1,
         data={
             CONF_CONFIGURATION_TYPE: CONFIGURATION_TYPE_LIGHT_GROUP_PLUS,
             CONF_NAME: "Living room",
@@ -176,8 +171,6 @@ async def test_config_entry_exposes_native_effects_and_toggle(
                 "scene.living_room_default",
                 "scene.living_room_cozy",
             ],
-            CONF_DEFAULT_SCENE_ENTITY_ID: "scene.living_room_default",
-            CONF_TURN_ON_BEHAVIOR: TurnOnBehavior.DEFAULT.value,
         },
     )
     entry.add_to_hass(hass)
